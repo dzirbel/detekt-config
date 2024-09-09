@@ -39,7 +39,3 @@ detektConfig {
 ```
 
 See the projects in [`samples`](samples) for examples across different project types and configurations.
-
-### Publishing
-
-TODO

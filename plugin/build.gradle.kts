@@ -2,6 +2,7 @@ import java.util.Properties
 
 plugins {
     `kotlin-dsl`
+    `maven-publish`
 }
 
 group = "io.github.dzirbel"
@@ -20,7 +21,7 @@ dependencies {
 }
 
 kotlin {
-    jvmToolchain(jdkVersion = 16)
+    jvmToolchain(jdkVersion = 11)
 }
 
 gradlePlugin {
@@ -30,6 +31,28 @@ gradlePlugin {
         register(name) {
             id = "$group.detekt-config"
             implementationClass = "$group.DetektConfigPlugin"
+        }
+    }
+}
+
+tasks.validatePlugins {
+    enableStricterValidation = true
+    failOnWarning = true
+    ignoreFailures = false
+}
+
+// run check every time :plugin is built, so it is checked on every use from the root project
+tasks.jar.configure { finalizedBy(tasks.check) }
+
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/dzirbel/detekt-config")
+            credentials {
+                username = "dzirbel"
+                password = System.getenv("GITHUB_TOKEN")
+            }
         }
     }
 }
