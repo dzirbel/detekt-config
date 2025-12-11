@@ -8,27 +8,27 @@ plugins {
 group = "io.github.dzirbel"
 version = "1.0.0"
 
+private val versions = providers.fileContents(layout.projectDirectory.file("src/main/resources/versions.properties"))
+    .asText
+    .map { text ->
+        Properties().apply { load(text.byteInputStream()) }
+    }
+private val detektVersion = versions.map { it["detekt"] }
+
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    val versions = file("src/main/resources/versions.properties").inputStream().use {
-        Properties().apply { load(it) }
-    }
-
-    implementation("io.gitlab.arturbosch.detekt:detekt-gradle-plugin:${versions["detekt"]}")
-}
-
-kotlin {
-    jvmToolchain(jdkVersion = 11)
+    implementation("io.gitlab.arturbosch.detekt:detekt-gradle-plugin:${detektVersion.get()}")
 }
 
 gradlePlugin {
+    website = "https://github.com/dzirbel/detekt-config"
     vcsUrl = "https://github.com/dzirbel/detekt-config"
 
     plugins {
-        register(name) {
+        register("detektConfig") {
             id = "$group.detekt-config"
             implementationClass = "$group.DetektConfigPlugin"
         }
@@ -40,9 +40,6 @@ tasks.validatePlugins {
     failOnWarning = true
     ignoreFailures = false
 }
-
-// run check every time :plugin is built, so it is checked on every use from the root project
-tasks.jar.configure { finalizedBy(tasks.check) }
 
 publishing {
     repositories {

@@ -10,7 +10,7 @@ internal fun readResourceProperties(name: String): Properties {
     }
 }
 
-internal fun readResource(name: String): String? {
+internal fun readResource(name: String): String {
     val stream = checkNotNull(classLoader.getResourceAsStream(name)) { "resource $name could not be found" }
     return stream.use { it.bufferedReader().readLines().joinToString(separator = "\n") }
 }
