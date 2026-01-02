@@ -1,4 +1,4 @@
-package com.dzirbel
+package io.github.dzirbel
 
 fun main() {
     var x = mutableSetOf<String>()

@@ -6,28 +6,36 @@ import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class JvmSampleTest {
 
-    val projectDir = File("../samples")
+    val projectDir = File("src/test/resources/jvm")
 
     @Test
     fun `check fails`() {
+        val expectedTaskOutput = listOf(
+            "> Task :detektMain FAILED",
+            "${projectDir.absolutePath}/src/main/kotlin/io/github/dzirbel/Main.kt:4:5: " +
+                "Variable 'x' could be val. [VarCouldBeVal]",
+            "",
+            "",
+        ).joinToString(separator = "\n")
+
         val result = GradleRunner.create()
             .withProjectDir(projectDir)
             .withPluginClasspath()
-            .withArguments(":jvm:check")
+            .withArguments("check")
             .buildAndFail()
 
-        val detektOutcome = checkNotNull(result.task(":jvm:detektMain")).outcome
-        assertEquals(detektOutcome, TaskOutcome.FAILED)
-        assertContains(
-            result.output,
-            "samples/jvm/src/main/kotlin/com/dzirbel/Main.kt:4:5: Variable 'x' could be val. [VarCouldBeVal]",
-        )
+        assertNotNull(result.task(":compileKotlin"))
+        assertNull(result.task(":check")) // check doesn't run because a dependency failed
 
-        assertNull(result.task(":jvm:check")) // check doesn't run because a dependency failed
+        assertEquals(TaskOutcome.FAILED, checkNotNull(result.task(":detektMain")).outcome)
+        assertContains(result.output, expectedTaskOutput)
+        assertTrue(result.output.contains(expectedTaskOutput))
     }
 
     @Test
@@ -35,10 +43,10 @@ class JvmSampleTest {
         val result = GradleRunner.create()
             .withProjectDir(projectDir)
             .withPluginClasspath()
-            .withArguments(":jvm:detekt")
+            .withArguments("detekt")
             .build()
 
-        val detektOutcome = checkNotNull(result.task(":jvm:detekt")).outcome
-        assertEquals(detektOutcome, TaskOutcome.SUCCESS)
+        assertEquals(listOf(":detekt"), result.tasks.map { it.path })
+        assertEquals(TaskOutcome.SUCCESS, checkNotNull(result.task(":detekt")).outcome)
     }
 }
