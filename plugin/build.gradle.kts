@@ -26,7 +26,6 @@ val kotlinPluginForTests = configurations.create("kotlinPluginForTests") {
 
 dependencies {
     implementation("io.gitlab.arturbosch.detekt:detekt-gradle-plugin:${detektVersion.get()}")
-    implementation(project(":rules"))
 
     testImplementation("org.jetbrains.kotlin:kotlin-test")
 

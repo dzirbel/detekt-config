@@ -17,6 +17,7 @@ Structure:
 - `rules/`: custom detekt rule set.
 
 ## Build, Test, and Development Commands
+Always run Gradle commands to verify code changes. Make sure the build both passes and the expected tasks were run.
 Use the Gradle wrapper:
 - `./gradlew build`: compile, test, and run verification tasks.
 - `./gradlew check`: aggregate verification tasks without full build packaging.

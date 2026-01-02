@@ -20,6 +20,6 @@ jobs:
           distribution: 'temurin'
       - uses: gradle/actions/setup-gradle@v4
 
-      - run: ./gradlew :plugin:publish
+      - run: ./gradlew publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

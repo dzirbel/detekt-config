@@ -46,7 +46,10 @@ class JvmSampleTest {
             .withArguments("detekt")
             .build()
 
-        assertEquals(listOf(":detekt"), result.tasks.map { it.path })
+        // remove tasks run in the included rules build
+        val tasks = result.tasks.map { it.path }.filter { !it.startsWith(":detekt-config:rules") }
+        assertEquals(listOf(":detekt"), tasks)
+
         assertEquals(TaskOutcome.SUCCESS, checkNotNull(result.task(":detekt")).outcome)
     }
 }
