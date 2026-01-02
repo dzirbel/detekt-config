@@ -19,6 +19,12 @@ class DetektConfigPlugin : Plugin<Project> {
         target.dependencies {
             val versions = readResourceProperties("versions.properties")
 
+            // TODO only works within this project, won't work externally
+            val rulesProject = target.rootProject.findProject(":rules")
+            if (rulesProject != null && rulesProject != target) {
+                add("detektPlugins", rulesProject)
+            }
+
             add("detektPlugins", "io.gitlab.arturbosch.detekt:detekt-formatting:${versions["detekt"]}")
 
             target.withCompose {
