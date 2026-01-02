@@ -1,18 +1,6 @@
-import org.gradle.api.initialization.resolve.RepositoriesMode
-
+// TODO make plugin a regular project in the build rather than included plugin build, so :check will work
 pluginManagement {
     includeBuild("plugin")
 }
 
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        mavenCentral()
-    }
-}
-
-plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
-}
-
-include(":samples:jvm")
+includeBuild("samples")

@@ -19,9 +19,6 @@ repositories {
     mavenCentral()
 }
 
-// Hack(?): create a configuration to add the Kotlin gradle plugin to the test classpath, otherwise Gradle projects
-// created within tests don't appear to have it. This is a deep solution which I don't fully understand, but I haven't
-// found another way.
 val kotlinPluginForTests = configurations.create("kotlinPluginForTests") {
     isCanBeConsumed = false
     isCanBeResolved = true
@@ -31,7 +28,10 @@ dependencies {
     implementation("io.gitlab.arturbosch.detekt:detekt-gradle-plugin:${detektVersion.get()}")
 
     testImplementation("org.jetbrains.kotlin:kotlin-test")
-    kotlinPluginForTests("org.jetbrains.kotlin:kotlin-gradle-plugin")
+
+    val kotlinGradlePlugin = kotlin("gradle-plugin")
+    testImplementation(kotlinGradlePlugin)
+    kotlinPluginForTests(kotlinGradlePlugin)
 }
 
 gradlePlugin {

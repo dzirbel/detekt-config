@@ -1,3 +1,5 @@
 /.idea/
+/.gradle-user/
 .gradle/
+.kotlin/
 build/

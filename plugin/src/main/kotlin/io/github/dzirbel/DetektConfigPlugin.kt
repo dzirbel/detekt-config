@@ -3,8 +3,8 @@ package io.github.dzirbel
 import io.gitlab.arturbosch.detekt.extensions.DetektExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.configure
+import org.gradle.kotlin.dsl.dependencies
 
 class DetektConfigPlugin : Plugin<Project> {
     override fun apply(target: Project) {
@@ -26,6 +26,10 @@ class DetektConfigPlugin : Plugin<Project> {
             }
         }
 
-        // TODO configure tasks for type resolution, etc?
+        target.pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
+            target.tasks.named { it == "check" }.configureEach {
+                dependsOn("detektMain")
+            }
+        }
     }
 }
