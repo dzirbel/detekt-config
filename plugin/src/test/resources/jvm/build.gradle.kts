@@ -1,5 +1,5 @@
 plugins {
-    embeddedKotlin("jvm")
+    kotlin("jvm")
     id("io.github.dzirbel.detekt-config")
 }
 
