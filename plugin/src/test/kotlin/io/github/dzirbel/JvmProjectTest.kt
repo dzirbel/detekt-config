@@ -17,10 +17,10 @@ class JvmProjectTest {
     fun `check fails`() {
         val result = GradleRunner.create().withProjectDir(projectDir).withArguments("check").buildAndFail()
 
-        assertNotNull(result.task(":compileKotlin"))
+        assertNotNull(result.task(":jvm:compileKotlin"))
         assertNull(result.task(":check")) // check doesn't run because a dependency failed
 
-        val detektMain = checkNotNull(result.task(":detektMain"))
+        val detektMain = checkNotNull(result.task(":jvm:detektMain"))
         assertEquals(TaskOutcome.FAILED, detektMain.outcome)
         assertEquals(
             "${sampleFile.absolutePath}:4:5: Variable 'x' could be val. [VarCouldBeVal]",
