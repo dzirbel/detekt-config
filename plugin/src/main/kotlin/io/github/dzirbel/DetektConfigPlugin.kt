@@ -32,5 +32,11 @@ class DetektConfigPlugin : Plugin<Project> {
                 dependsOn("detektMain")
             }
         }
+
+        target.pluginManager.withPlugin("org.jetbrains.kotlin.multiplatform") {
+            target.tasks.named { it == "check" }.configureEach {
+                dependsOn("detektJsMain") // TODO hack: should auto-detect proper targets
+            }
+        }
     }
 }

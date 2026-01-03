@@ -1,6 +1,6 @@
 package io.github.dzirbel
 
-fun main() {
+fun sample() {
     var x = mutableSetOf<String>()
     println("Hello $x")
 }
