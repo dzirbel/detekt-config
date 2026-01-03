@@ -5,19 +5,12 @@ plugins {
     `maven-publish`
 }
 
-group = "io.github.dzirbel"
-version = "1.0.0"
-
-private val versions = providers.fileContents(layout.projectDirectory.file("src/main/resources/versions.properties"))
-    .asText
+private val versionsFile = rootProject.layout.projectDirectory.file("plugin/src/main/resources/versions.properties")
+private val versions = providers.fileContents(versionsFile).asText
     .map { text ->
         Properties().apply { load(text.byteInputStream()) }
     }
 private val detektVersion = versions.map { it["detekt"] }
-
-repositories {
-    mavenCentral()
-}
 
 val kotlinPluginForTests = configurations.create("kotlinPluginForTests") {
     isCanBeConsumed = false
@@ -27,11 +20,9 @@ val kotlinPluginForTests = configurations.create("kotlinPluginForTests") {
 dependencies {
     implementation("io.gitlab.arturbosch.detekt:detekt-gradle-plugin:${detektVersion.get()}")
 
-    testImplementation("org.jetbrains.kotlin:kotlin-test")
-
-    val kotlinGradlePlugin = kotlin("gradle-plugin")
-    testImplementation(kotlinGradlePlugin)
-    kotlinPluginForTests(kotlinGradlePlugin)
+    testImplementation(kotlin("test"))
+    testImplementation(kotlin("gradle-plugin"))
+    kotlinPluginForTests(kotlin("gradle-plugin"))
 }
 
 gradlePlugin {

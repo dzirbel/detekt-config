@@ -2,31 +2,21 @@ import java.util.Properties
 
 plugins {
     kotlin("jvm") version libs.versions.kotlin
-    `java-library`
     `maven-publish`
 }
 
-group = "io.github.dzirbel"
-
-repositories {
-    mavenCentral()
-}
-
-val versions = Properties().apply {
-    val versionsFile = rootProject.file("plugin/src/main/resources/versions.properties")
-    check(versionsFile.exists()) { "Missing versions.properties at ${versionsFile.path}" }
-    versionsFile.inputStream().use { load(it) }
-}
-val detektVersion = versions["detekt"] as String
-val rulesVersion = versions["detekt-config-rules"] as String
-
-version = rulesVersion
+private val versionsFile = rootProject.layout.projectDirectory.file("plugin/src/main/resources/versions.properties")
+private val versions = providers.fileContents(versionsFile).asText
+    .map { text ->
+        Properties().apply { load(text.byteInputStream()) }
+    }
+private val detektVersion = versions.map { it["detekt"] }
 
 dependencies {
-    compileOnly("io.gitlab.arturbosch.detekt:detekt-api:$detektVersion")
-    testImplementation("io.gitlab.arturbosch.detekt:detekt-test:$detektVersion")
-    testImplementation("io.gitlab.arturbosch.detekt:detekt-api:$detektVersion")
+    compileOnly("io.gitlab.arturbosch.detekt:detekt-api:${detektVersion.get()}")
+
     testImplementation(kotlin("test"))
+    testImplementation("io.gitlab.arturbosch.detekt:detekt-test:${detektVersion.get()}")
 }
 
 publishing {
