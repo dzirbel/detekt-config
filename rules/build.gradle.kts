@@ -1,7 +1,7 @@
 import java.util.Properties
 
 plugins {
-    kotlin("jvm") version "1.9.24"
+    kotlin("jvm") version libs.versions.kotlin
     `java-library`
     `maven-publish`
 }
