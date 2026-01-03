@@ -1,10 +1,12 @@
 package io.github.dzirbel
 
+import io.gitlab.arturbosch.detekt.Detekt
 import io.gitlab.arturbosch.detekt.extensions.DetektExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
+import org.gradle.kotlin.dsl.withType
 
 class DetektConfigPlugin : Plugin<Project> {
     override fun apply(target: Project) {
@@ -27,16 +29,44 @@ class DetektConfigPlugin : Plugin<Project> {
             }
         }
 
-        target.pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
-            target.tasks.named { it == "check" }.configureEach {
-                dependsOn("detektMain")
-            }
-        }
+        target.configureDetektDefaultTask()
+    }
+}
 
-        target.pluginManager.withPlugin("org.jetbrains.kotlin.multiplatform") {
-            target.tasks.named { it == "check" }.configureEach {
-                dependsOn("detektJsMain") // TODO hack: should auto-detect proper targets
+private fun Project.configureDetektDefaultTask() {
+    val detektMainTasks = tasks.withType<Detekt>()
+        .matching { it.name != "detekt" && it.name.startsWith("detekt") && it.name.endsWith("Main") }
+    val detektTypeResolutionTasks = detektMainTasks
+        .matching { !it.name.contains("Metadata") }
+
+    tasks.named("detekt").configure {
+        dependsOn(detektTypeResolutionTasks)
+        onlyIf { detektTypeResolutionTasks.isNotEmpty() }
+    }
+
+    pluginManager.withPlugin("org.jetbrains.kotlin.multiplatform") {
+        afterEvaluate {
+            val commonMainDir = layout.projectDirectory.dir("src/commonMain/kotlin").asFile
+            detektTypeResolutionTasks.configureEach {
+                if (commonMainDir.exists()) {
+                    source(commonMainDir)
+                }
+                if (classpath.isEmpty) {
+                    val compileClasspath = detektCompileClasspath(name)
+                    if (compileClasspath != null) {
+                        classpath.from(compileClasspath)
+                    }
+                    if (compileClasspath == null || compileClasspath.files.isEmpty()) {
+                        classpath.from(detektClasspath)
+                    }
+                }
             }
         }
     }
 }
+
+private fun Project.detektCompileClasspath(taskName: String) = taskName
+    .removePrefix("detekt")
+    .takeIf { it.isNotBlank() }
+    ?.replaceFirstChar { it.lowercase() }
+    ?.let { configurations.findByName("${it}CompileClasspath") }

@@ -13,23 +13,30 @@ class JvmProjectTest {
     private val projectDir = File("src/test/resources/jvm")
     private val sampleFile = projectDir.resolve("src/main/kotlin/io/github/dzirbel/Sample.kt")
 
+    // TODO this should also include the other results from the JS test
+    private val results = "${sampleFile.absolutePath}:4:5: Variable 'x' could be val. [VarCouldBeVal]"
+
     @Test
     fun `check fails`() {
         val result = GradleRunner.create().withProjectDir(projectDir).withArguments("check").buildAndFail()
 
         assertNotNull(result.task(":jvm:compileKotlin"))
-        assertNull(result.task(":check")) // check doesn't run because a dependency failed
+        assertNull(result.task(":check"))
 
         val detektMain = checkNotNull(result.task(":jvm:detektMain"))
         assertEquals(TaskOutcome.FAILED, detektMain.outcome)
-        assertEquals(
-            "${sampleFile.absolutePath}:4:5: Variable 'x' could be val. [VarCouldBeVal]",
-            result.findTaskOutput(detektMain),
-        )
+        assertEquals(results, result.findTaskOutput(detektMain))
     }
 
     @Test
-    fun `detekt passes`() {
-        GradleRunner.create().withProjectDir(projectDir).withArguments("detekt").build()
+    fun `detekt fails`() {
+        val result = GradleRunner.create().withProjectDir(projectDir).withArguments("detekt").buildAndFail()
+
+        assertNotNull(result.task(":jvm:compileKotlin"))
+        assertNull(result.task(":detekt"))
+
+        val detektMain = checkNotNull(result.task(":jvm:detektMain"))
+        assertEquals(TaskOutcome.FAILED, detektMain.outcome)
+        assertEquals(results, result.findTaskOutput(detektMain))
     }
 }

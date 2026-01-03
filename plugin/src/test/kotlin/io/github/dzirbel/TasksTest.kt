@@ -23,26 +23,26 @@ class TasksTest {
     @Test
     fun `after kotlin jvm plugin`() {
         project.apply(plugin = "org.jetbrains.kotlin.jvm")
-        assertEquals(listOf(":test"), project.tasks.check.dependencies().map { it.path })
+        assertEquals(setOf(":test"), project.tasks.check.dependencyPaths())
 
         project.apply(plugin = "io.github.dzirbel.detekt-config")
-        assertEquals(
-            setOf(":detekt", ":test", ":detektMain"),
-            project.tasks.check.dependencies().mapTo(mutableSetOf()) { it.path },
-        )
+        assertEquals(setOf(":detekt", ":test"), project.tasks.check.dependencyPaths())
+        assertEquals(setOf(":detektMain"), project.tasks.detekt.dependencyPaths())
     }
 
     @Test
     fun `before kotlin jvm plugin`() {
         project.apply(plugin = "io.github.dzirbel.detekt-config")
         project.apply(plugin = "org.jetbrains.kotlin.jvm")
-        assertEquals(
-            setOf(":detekt", ":test", ":detektMain"),
-            project.tasks.check.dependencies().mapTo(mutableSetOf()) { it.path },
-        )
+        assertEquals(setOf(":detekt", ":test"), project.tasks.check.dependencyPaths())
+        assertEquals(setOf(":detektMain"), project.tasks.detekt.dependencyPaths())
     }
 
-    private val TaskContainer.check: Task get() = getByPath(":check")
+    // TODO KMP/JS tests
 
-    private fun Task.dependencies(): Set<Task> = taskDependencies.getDependencies(this)
+    private val TaskContainer.check: Task get() = getByPath(":check")
+    private val TaskContainer.detekt: Task get() = getByPath(":detekt")
+
+    private fun Task.dependencyPaths(): Set<String> =
+        taskDependencies.getDependencies(this).mapTo(mutableSetOf()) { it.path }
 }
