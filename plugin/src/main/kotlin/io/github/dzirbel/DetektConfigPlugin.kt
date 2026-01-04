@@ -44,6 +44,24 @@ private fun Project.configureDetektDefaultTask() {
         onlyIf { detektTypeResolutionTasks.isNotEmpty() }
     }
 
+    afterEvaluate {
+        detektTypeResolutionTasks.configureEach {
+            val compileClasspaths = detektCompileClasspaths(name)
+            if (compileClasspaths.isNotEmpty()) {
+                compileClasspaths.forEach { classpath.from(it) }
+            }
+            if ((compileClasspaths.isEmpty() || compileClasspaths.all { it.files.isEmpty() }) && classpath.isEmpty) {
+                classpath.from(detektClasspath)
+            }
+            val kotlinStdlibFiles = classpath.files.filter { it.name.startsWith("kotlin-stdlib") }
+            if (kotlinStdlibFiles.any { it.name.contains("-2.") }) {
+                val filteredClasspath = classpath.filter { !it.name.startsWith("kotlin-stdlib") }
+                classpath.setFrom(filteredClasspath)
+                classpath.from(detektClasspath)
+            }
+        }
+    }
+
     pluginManager.withPlugin("org.jetbrains.kotlin.multiplatform") {
         afterEvaluate {
             val commonMainDir = layout.projectDirectory.dir("src/commonMain/kotlin").asFile
@@ -51,22 +69,23 @@ private fun Project.configureDetektDefaultTask() {
                 if (commonMainDir.exists()) {
                     source(commonMainDir)
                 }
-                if (classpath.isEmpty) {
-                    val compileClasspath = detektCompileClasspath(name)
-                    if (compileClasspath != null) {
-                        classpath.from(compileClasspath)
-                    }
-                    if (compileClasspath == null || compileClasspath.files.isEmpty()) {
-                        classpath.from(detektClasspath)
-                    }
-                }
             }
         }
     }
 }
 
-private fun Project.detektCompileClasspath(taskName: String) = taskName
+private fun Project.detektCompileClasspaths(taskName: String): List<org.gradle.api.artifacts.Configuration> = taskName
     .removePrefix("detekt")
     .takeIf { it.isNotBlank() }
     ?.replaceFirstChar { it.lowercase() }
-    ?.let { configurations.findByName("${it}CompileClasspath") }
+    ?.let { sourceSetName ->
+        if (sourceSetName == "main") {
+            listOfNotNull(
+                configurations.findByName("mainCompileClasspath"),
+                configurations.findByName("compileClasspath"),
+            )
+        } else {
+            listOfNotNull(configurations.findByName("${sourceSetName}CompileClasspath"))
+        }
+    }
+    ?: emptyList()

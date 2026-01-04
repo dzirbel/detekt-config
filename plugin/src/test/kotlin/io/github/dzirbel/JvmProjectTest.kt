@@ -13,8 +13,11 @@ class JvmProjectTest {
     private val projectDir = File("src/test/resources/jvm")
     private val sampleFile = projectDir.resolve("src/main/kotlin/io/github/dzirbel/Sample.kt")
 
-    // TODO this should also include the other results from the JS test
-    private val results = "${sampleFile.absolutePath}:4:5: Variable 'x' could be val. [VarCouldBeVal]"
+    private val results = """
+        ${sampleFile.absolutePath}:4:5: Variable x is declared as `var` with a mutable type kotlin.collections.MutableSet. Consider using `val` or an immutable collection or value type [DoubleMutabilityForCollection]
+        ${sampleFile.absolutePath}:5:5: The method `kotlin.io.println` has been forbidden: println does not allow you to configure the output stream. Use a logger instead. [ForbiddenMethodCall]
+        ${sampleFile.absolutePath}:4:5: Variable 'x' could be val. [VarCouldBeVal]
+    """.trimIndent()
 
     @Test
     fun `check fails`() {

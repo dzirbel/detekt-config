@@ -15,6 +15,7 @@ Structure:
   - `plugin/src/main/resources`: config assets (`base.yml`, `compose.yml`) and shared versions (`versions.properties`).
   - `plugin/src/test/kotlin` and `plugin/src/test/resources`: unit tests and TestKit fixture project.
 - `rules/`: custom detekt rule set.
+- `docs/`: reference notes for plugin behavior and troubleshooting (see `docs/detekt-classpath-notes.md`).
 
 ## Build, Test, and Development Commands
 Always run Gradle commands to verify code changes. Make sure the build both passes and the expected tasks were run.
