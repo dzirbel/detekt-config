@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
 import java.util.Properties
 
 subprojects {
@@ -12,9 +14,17 @@ subprojects {
 
     tasks.withType<Test>().configureEach {
         testLogging {
+            events(
+                TestLogEvent.FAILED,
+                TestLogEvent.SKIPPED,
+                TestLogEvent.STANDARD_OUT,
+                TestLogEvent.STANDARD_ERROR,
+            )
+            exceptionFormat = TestExceptionFormat.FULL
             showCauses = true
             showExceptions = true
             showStackTraces = true
+            showStandardStreams = true
         }
     }
 }
