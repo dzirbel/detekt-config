@@ -74,7 +74,16 @@ private fun taskLineRegex(path: String? = null): Regex {
 
 private fun assertTaskRun(result: BuildResult, path: String, outcomes: Set<TaskOutcome>): String {
     val outcome = result.findTaskOutcome(path)
-    assertEquals(result.task(path)?.outcome, outcome, "outcomes from output and build are mismatched")
-    assertTrue(outcome in outcomes, "expected $path outcome in $outcomes, but was $outcome")
+
+    assertEquals(
+        result.task(path)?.outcome,
+        outcome,
+        "outcomes from output and build are mismatched. Output:\n\n${result.output}",
+    )
+    assertTrue(
+        outcome in outcomes,
+        "expected $path outcome in $outcomes, but was $outcome. Output:\n\n${result.output}",
+    )
+
     return result.findTaskOutput(path)
 }
