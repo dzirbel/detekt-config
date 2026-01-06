@@ -9,7 +9,10 @@ class KmpNativeProjectTest {
 
     private val projectDir = File("src/test/resources/kmp-native")
     private val commonFile = projectDir.resolve("src/commonMain/kotlin/io/github/dzirbel/SampleCommon.kt")
-    private val appleFile = projectDir.resolve("src/iosMain/kotlin/io/github/dzirbel/SampleNative.kt")
+    // TODO detekt should also run on SampleNative in iosMain
+    private val iosSimulatorArm64File =
+        projectDir.resolve("src/iosSimulatorArm64Main/kotlin/io/github/dzirbel/SampleIosSimulatorArm64.kt")
+    private val iosX64File = projectDir.resolve("src/iosX64Main/kotlin/io/github/dzirbel/SampleIosX64.kt")
     private val linuxArm64File = projectDir.resolve("src/linuxArm64Main/kotlin/io/github/dzirbel/SampleLinuxArm64.kt")
     private val linuxFile = projectDir.resolve("src/linuxX64Main/kotlin/io/github/dzirbel/SampleLinux.kt")
     private val mingwFile = projectDir.resolve("src/mingwX64Main/kotlin/io/github/dzirbel/SampleMingw.kt")
@@ -29,7 +32,8 @@ class KmpNativeProjectTest {
             else -> ":kmp-native:detektLinuxX64Main"
         }
         val nativeFile = when {
-            isMac -> appleFile
+            isMac && isArm64 -> iosSimulatorArm64File
+            isMac -> iosX64File
             isWindows -> mingwFile
             isArm64 -> linuxArm64File
             else -> linuxFile
