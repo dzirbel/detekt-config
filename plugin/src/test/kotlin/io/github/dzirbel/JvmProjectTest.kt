@@ -1,12 +1,9 @@
 package io.github.dzirbel
 
 import org.gradle.testkit.runner.GradleRunner
-import org.gradle.testkit.runner.TaskOutcome
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 
 class JvmProjectTest {
 
@@ -26,12 +23,9 @@ class JvmProjectTest {
             .withPlainConsole("check")
             .buildAndFail()
 
-        assertNotNull(result.task(":jvm:compileKotlin"))
-        assertNull(result.task(":check"))
-
-        val detektMain = checkNotNull(result.task(":jvm:detektMain"))
-        assertEquals(TaskOutcome.FAILED, detektMain.outcome)
-        assertEquals(results, result.findTaskOutput(detektMain))
+        assertTaskPassed(result, ":jvm:compileKotlin")
+        assertTaskNotRun(result, ":check")
+        assertEquals(results, assertTaskFailed(result, ":jvm:detektMain"))
     }
 
     @Test
@@ -41,11 +35,8 @@ class JvmProjectTest {
             .withPlainConsole("detekt")
             .buildAndFail()
 
-        assertNotNull(result.task(":jvm:compileKotlin"))
-        assertNull(result.task(":detekt"))
-
-        val detektMain = checkNotNull(result.task(":jvm:detektMain"))
-        assertEquals(TaskOutcome.FAILED, detektMain.outcome)
-        assertEquals(results, result.findTaskOutput(detektMain))
+        assertTaskPassed(result, ":jvm:compileKotlin")
+        assertTaskNotRun(result, ":detekt")
+        assertEquals(results, assertTaskFailed(result, ":jvm:detektMain"))
     }
 }

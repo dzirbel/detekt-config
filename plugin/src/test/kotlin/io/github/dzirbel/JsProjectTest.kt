@@ -1,11 +1,9 @@
 package io.github.dzirbel
 
 import org.gradle.testkit.runner.GradleRunner
-import org.gradle.testkit.runner.TaskOutcome
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
 
 class JsProjectTest {
 
@@ -26,11 +24,9 @@ class JsProjectTest {
             .buildAndFail()
 
         // TODO doesn't depend on :js:compileKotlinJs, why?
-        assertNull(result.task(":check"))
 
-        val detektMain = checkNotNull(result.task(":js:detektJsMain"))
-        assertEquals(TaskOutcome.FAILED, detektMain.outcome)
-        assertEquals(results, result.findTaskOutput(detektMain))
+        assertTaskNotRun(result, ":check")
+        assertEquals(results, assertTaskFailed(result, ":js:detektJsMain"))
     }
 
     @Test
@@ -41,10 +37,8 @@ class JsProjectTest {
             .buildAndFail()
 
         // TODO doesn't depend on :js:compileKotlinJs, why?
-        assertNull(result.task(":detekt"))
 
-        val detektMain = checkNotNull(result.task(":js:detektJsMain"))
-        assertEquals(TaskOutcome.FAILED, detektMain.outcome)
-        assertEquals(results, result.findTaskOutput(detektMain))
+        assertTaskNotRun(result, ":detekt")
+        assertEquals(results, assertTaskFailed(result, ":js:detektJsMain"))
     }
 }

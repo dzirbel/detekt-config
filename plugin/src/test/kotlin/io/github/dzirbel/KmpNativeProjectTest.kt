@@ -1,11 +1,9 @@
 package io.github.dzirbel
 
 import org.gradle.testkit.runner.GradleRunner
-import org.gradle.testkit.runner.TaskOutcome
 import java.io.File
 import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+import kotlin.test.assertContains
 
 class KmpNativeProjectTest {
 
@@ -20,17 +18,19 @@ class KmpNativeProjectTest {
     fun `detekt runs for native target`() {
         val osName = System.getProperty("os.name")
         val osArch = System.getProperty("os.arch")
+        val isMac = osName.contains("Mac", ignoreCase = true)
+        val isWindows = osName.contains("Windows", ignoreCase = true)
         val isArm64 = osArch.equals("aarch64", ignoreCase = true) || osArch.equals("arm64", ignoreCase = true)
         val detektTaskName = when {
-            osName.contains("Mac", ignoreCase = true) && isArm64 -> ":kmp-native:detektIosSimulatorArm64Main"
-            osName.contains("Mac", ignoreCase = true) -> ":kmp-native:detektIosX64Main"
-            osName.contains("Windows", ignoreCase = true) -> ":kmp-native:detektMingwX64Main"
+            isMac && isArm64 -> ":kmp-native:detektIosSimulatorArm64Main"
+            isMac -> ":kmp-native:detektIosX64Main"
+            isWindows -> ":kmp-native:detektMingwX64Main"
             isArm64 -> ":kmp-native:detektLinuxArm64Main"
             else -> ":kmp-native:detektLinuxX64Main"
         }
         val nativeFile = when {
-            osName.contains("Mac", ignoreCase = true) -> appleFile
-            osName.contains("Windows", ignoreCase = true) -> mingwFile
+            isMac -> appleFile
+            isWindows -> mingwFile
             isArm64 -> linuxArm64File
             else -> linuxFile
         }
@@ -40,15 +40,13 @@ class KmpNativeProjectTest {
             .withPlainConsole(":kmp-native:detekt", "--continue")
             .buildAndFail()
 
-        val detektNativeMain = checkNotNull(result.task(detektTaskName))
-        assertEquals(TaskOutcome.FAILED, detektNativeMain.outcome)
-        val output = result.findTaskOutput(detektNativeMain)
+        val output = assertTaskFailed(result, detektTaskName)
         assertVarCouldBeVal(output, commonFile)
         assertVarCouldBeVal(output, nativeFile)
     }
 
     private fun assertVarCouldBeVal(output: String, file: File) {
         val expected = "${file.absolutePath}:4:5: Variable 'x' could be val. [VarCouldBeVal]"
-        assertTrue(output.contains(expected))
+        assertContains(output, expected)
     }
 }

@@ -1,23 +1,44 @@
 package io.github.dzirbel
 
 import org.gradle.testkit.runner.BuildResult
-import org.gradle.testkit.runner.BuildTask
 import org.gradle.testkit.runner.GradleRunner
+import org.gradle.testkit.runner.TaskOutcome
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
-internal fun BuildResult.findTaskOutput(task: BuildTask) = findTaskOutput(path = task.path)
+private val ansiRegex = Regex("\\u001B\\[[;\\d]*m")
 
-internal fun BuildResult.findTaskOutput(path: String): String {
-    val lines = output.lineSequence()
-        .map { line -> line.trimEnd('\r') }
-        .toList()
-    val startIndex = lines.indexOfFirst { line -> line.startsWith("> Task $path") }
+internal fun GradleRunner.withPlainConsole(vararg arguments: String): GradleRunner =
+    withArguments(*arguments, "--console=plain")
+
+internal fun assertTaskNotRun(result: BuildResult, path: String) {
+    assertNull(result.findTaskLine(path))
+    assertNull(result.task(path))
+}
+
+internal fun assertTaskFailed(result: BuildResult, path: String): String {
+    return assertTaskRun(result, path, setOf(TaskOutcome.FAILED))
+}
+
+internal fun assertTaskPassed(result: BuildResult, path: String): String {
+    return assertTaskRun(result, path, setOf(TaskOutcome.SUCCESS, TaskOutcome.UP_TO_DATE, TaskOutcome.FROM_CACHE))
+}
+
+private fun BuildResult.outputLines(): Sequence<String> =
+    output.lineSequence().map { line -> line.replace(ansiRegex, "").trimEnd('\r') }
+
+private fun BuildResult.findTaskOutput(path: String): String {
+    val lines = outputLines().toList()
+    val matcher = taskLineRegex(path)
+    val startIndex = lines.indexOfFirst { line -> matcher.containsMatchIn(line) }
     if (startIndex == -1) return ""
     return buildList {
         var i = startIndex + 1
         var hasOutput = false
         while (i < lines.size) {
             val line = lines[i]
-            if (line.startsWith("> Task ")) break
+            if (taskLineRegex().containsMatchIn(line)) break
             if (line.isBlank()) {
                 if (hasOutput) break
                 i++
@@ -30,5 +51,30 @@ internal fun BuildResult.findTaskOutput(path: String): String {
     }.joinToString(separator = "\n")
 }
 
-internal fun GradleRunner.withPlainConsole(vararg arguments: String): GradleRunner =
-    withArguments(*arguments, "--console=plain")
+private fun BuildResult.findTaskLine(path: String): String? =
+    outputLines().firstOrNull { line -> taskLineRegex(path).containsMatchIn(line) }
+
+private fun BuildResult.findTaskOutcome(path: String): TaskOutcome? {
+    val line = findTaskLine(path) ?: return null
+    return when (val suffix = line.substringAfter("> Task $path").trim()) {
+        "", "SUCCESS" -> TaskOutcome.SUCCESS
+        "FAILED" -> TaskOutcome.FAILED
+        "UP-TO-DATE" -> TaskOutcome.UP_TO_DATE
+        "FROM-CACHE" -> TaskOutcome.FROM_CACHE
+        "NO-SOURCE" -> TaskOutcome.NO_SOURCE
+        "SKIPPED" -> TaskOutcome.SKIPPED
+        else -> error("unexpected task suffix $suffix")
+    }
+}
+
+private fun taskLineRegex(path: String? = null): Regex {
+    val suffix = if (path == null) "" else "\\s+${Regex.escape(path)}"
+    return Regex("> Task$suffix(?:\\s|\$)")
+}
+
+private fun assertTaskRun(result: BuildResult, path: String, outcomes: Set<TaskOutcome>): String {
+    val outcome = result.findTaskOutcome(path)
+    assertEquals(result.task(path)?.outcome, outcome, "outcomes from output and build are mismatched")
+    assertTrue(outcome in outcomes, "expected $path outcome in $outcomes, but was $outcome")
+    return result.findTaskOutput(path)
+}
