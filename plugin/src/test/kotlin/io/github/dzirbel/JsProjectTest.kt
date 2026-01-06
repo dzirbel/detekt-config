@@ -20,7 +20,10 @@ class JsProjectTest {
 
     @Test
     fun `check fails`() {
-        val result = GradleRunner.create().withProjectDir(projectDir).withArguments("check").buildAndFail()
+        val result = GradleRunner.create()
+            .withProjectDir(projectDir)
+            .withPlainConsole("check")
+            .buildAndFail()
 
         // TODO doesn't depend on :js:compileKotlinJs, why?
         assertNull(result.task(":check"))
@@ -32,7 +35,10 @@ class JsProjectTest {
 
     @Test
     fun `detekt fails`() {
-        val result = GradleRunner.create().withProjectDir(projectDir).withArguments("detekt").buildAndFail()
+        val result = GradleRunner.create()
+            .withProjectDir(projectDir)
+            .withPlainConsole("detekt")
+            .buildAndFail()
 
         // TODO doesn't depend on :js:compileKotlinJs, why?
         assertNull(result.task(":detekt"))

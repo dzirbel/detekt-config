@@ -21,7 +21,7 @@ class KmpJvmJsProjectTest {
     fun `check runs detekt for kmp jvm and js`() {
         val result = GradleRunner.create()
             .withProjectDir(projectDir)
-            .withArguments(":kmp-jvm-js:check", "--continue")
+            .withPlainConsole(":kmp-jvm-js:check", "--continue")
             .buildAndFail()
 
         val detektJvmMain = checkNotNull(result.task(":kmp-jvm-js:detektJvmMain"))
@@ -44,7 +44,7 @@ class KmpJvmJsProjectTest {
     fun `detekt includes shared source set`() {
         val result = GradleRunner.create()
             .withProjectDir(projectDir)
-            .withArguments(":kmp-jvm-js:check", "--continue")
+            .withPlainConsole(":kmp-jvm-js:check", "--continue")
             .buildAndFail()
 
         val detektJvmMain = checkNotNull(result.task(":kmp-jvm-js:detektJvmMain"))

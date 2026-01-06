@@ -2,12 +2,13 @@ package io.github.dzirbel
 
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.BuildTask
+import org.gradle.testkit.runner.GradleRunner
 
 internal fun BuildResult.findTaskOutput(task: BuildTask) = findTaskOutput(path = task.path)
 
 internal fun BuildResult.findTaskOutput(path: String): String {
     val lines = output.lineSequence()
-        .map { line -> line.stripAnsi().trimEnd('\r') }
+        .map { line -> line.trimEnd('\r') }
         .toList()
     val startIndex = lines.indexOfFirst { line -> line.startsWith("> Task $path") }
     if (startIndex == -1) return ""
@@ -29,6 +30,5 @@ internal fun BuildResult.findTaskOutput(path: String): String {
     }.joinToString(separator = "\n")
 }
 
-private val ansiRegex = Regex("\\u001B\\[[;\\d]*m")
-
-private fun String.stripAnsi(): String = replace(ansiRegex, "")
+internal fun GradleRunner.withPlainConsole(vararg arguments: String): GradleRunner =
+    withArguments(*arguments, "--console=plain")

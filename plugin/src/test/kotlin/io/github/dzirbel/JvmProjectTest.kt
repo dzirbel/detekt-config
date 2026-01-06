@@ -21,7 +21,10 @@ class JvmProjectTest {
 
     @Test
     fun `check fails`() {
-        val result = GradleRunner.create().withProjectDir(projectDir).withArguments("check").buildAndFail()
+        val result = GradleRunner.create()
+            .withProjectDir(projectDir)
+            .withPlainConsole("check")
+            .buildAndFail()
 
         assertNotNull(result.task(":jvm:compileKotlin"))
         assertNull(result.task(":check"))
@@ -33,7 +36,10 @@ class JvmProjectTest {
 
     @Test
     fun `detekt fails`() {
-        val result = GradleRunner.create().withProjectDir(projectDir).withArguments("detekt").buildAndFail()
+        val result = GradleRunner.create()
+            .withProjectDir(projectDir)
+            .withPlainConsole("detekt")
+            .buildAndFail()
 
         assertNotNull(result.task(":jvm:compileKotlin"))
         assertNull(result.task(":detekt"))
