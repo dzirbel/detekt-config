@@ -29,7 +29,22 @@ kotlin {
 
     sourceSets {
         if (isMac) {
-            val iosMain by getting
+            if (findByName("iosMain") == null) {
+                // Ensure iOS source sets exist even if the default hierarchy template is disabled.
+                val commonMain by getting
+                val iosMain by creating {
+                    dependsOn(commonMain)
+                }
+                val iosX64Main by getting {
+                    dependsOn(iosMain)
+                }
+                val iosArm64Main by getting {
+                    dependsOn(iosMain)
+                }
+                val iosSimulatorArm64Main by getting {
+                    dependsOn(iosMain)
+                }
+            }
         } else if (isWindows) {
             val mingwX64Main by getting
         } else {
