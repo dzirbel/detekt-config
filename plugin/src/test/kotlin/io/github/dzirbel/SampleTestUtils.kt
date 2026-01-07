@@ -3,14 +3,13 @@ package io.github.dzirbel
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 private val ansiRegex = Regex("\\u001B\\[[;\\d]*m")
 
 internal fun assertTaskNotRun(result: BuildResult, path: String) {
-    assertFalse(result.findTaskLines(path).any())
+    assertNull(result.findTaskOutcome(path))
     assertNull(result.task(path))
 }
 
@@ -55,6 +54,7 @@ private fun BuildResult.findTaskOutcome(path: String): TaskOutcome? {
     val suffix = findTaskLines(path)
         .map { line -> line.substringAfter("> Task $path").trim() }
         .firstOrNull { it.isNotEmpty() }
+        ?: return null
 
     return when (suffix) {
         "SUCCESS" -> TaskOutcome.SUCCESS
@@ -63,7 +63,7 @@ private fun BuildResult.findTaskOutcome(path: String): TaskOutcome? {
         "FROM-CACHE" -> TaskOutcome.FROM_CACHE
         "NO-SOURCE" -> TaskOutcome.NO_SOURCE
         "SKIPPED" -> TaskOutcome.SKIPPED
-        else -> error("unexpected task suffix $suffix")
+        else -> error("unexpected task suffix $suffix. Output:\n\n$output")
     }
 }
 
