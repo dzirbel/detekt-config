@@ -3,13 +3,14 @@ package io.github.dzirbel
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 private val ansiRegex = Regex("\\u001B\\[[;\\d]*m")
 
 internal fun assertTaskNotRun(result: BuildResult, path: String) {
-    assertNull(result.findTaskLine(path))
+    assertFalse(result.findTaskLines(path).any())
     assertNull(result.task(path))
 }
 
@@ -47,13 +48,16 @@ private fun BuildResult.findTaskOutput(path: String): String {
     }.joinToString(separator = "\n")
 }
 
-private fun BuildResult.findTaskLine(path: String): String? =
-    outputLines().firstOrNull { line -> taskLineRegex(path).containsMatchIn(line) }
+private fun BuildResult.findTaskLines(path: String): Sequence<String> =
+    outputLines().filter { line -> taskLineRegex(path).containsMatchIn(line) }
 
 private fun BuildResult.findTaskOutcome(path: String): TaskOutcome? {
-    val line = findTaskLine(path) ?: return null
-    return when (val suffix = line.substringAfter("> Task $path").trim()) {
-        "", "SUCCESS" -> TaskOutcome.SUCCESS
+    val suffix = findTaskLines(path)
+        .map { line -> line.substringAfter("> Task $path").trim() }
+        .firstOrNull { it.isNotEmpty() }
+
+    return when (suffix) {
+        "SUCCESS" -> TaskOutcome.SUCCESS
         "FAILED" -> TaskOutcome.FAILED
         "UP-TO-DATE" -> TaskOutcome.UP_TO_DATE
         "FROM-CACHE" -> TaskOutcome.FROM_CACHE
