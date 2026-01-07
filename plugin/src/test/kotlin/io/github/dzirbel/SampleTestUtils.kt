@@ -51,19 +51,24 @@ private fun BuildResult.findTaskLines(path: String): Sequence<String> =
     outputLines().filter { line -> taskLineRegex(path).containsMatchIn(line) }
 
 private fun BuildResult.findTaskOutcome(path: String): TaskOutcome? {
-    val suffix = findTaskLines(path)
+    val suffixes = findTaskLines(path)
         .map { line -> line.substringAfter("> Task $path").trim() }
-        .firstOrNull { it.isNotEmpty() }
-        ?: return null
+        .toList()
 
-    return when (suffix) {
+    if (suffixes.isEmpty()) return null
+    if (suffixes.all { it.isEmpty() }) return TaskOutcome.SUCCESS
+
+    val outcomes = suffixes.filter { it.isNotEmpty() }.distinct()
+    assertEquals(1, outcomes.size, "multiple task outcomes for $path: $outcomes. Output:\n\n$output")
+
+    return when (val outcome = outcomes.first()) {
         "SUCCESS" -> TaskOutcome.SUCCESS
         "FAILED" -> TaskOutcome.FAILED
         "UP-TO-DATE" -> TaskOutcome.UP_TO_DATE
         "FROM-CACHE" -> TaskOutcome.FROM_CACHE
         "NO-SOURCE" -> TaskOutcome.NO_SOURCE
         "SKIPPED" -> TaskOutcome.SKIPPED
-        else -> error("unexpected task suffix $suffix. Output:\n\n$output")
+        else -> error("unexpected task outcome $outcome. Output:\n\n$output")
     }
 }
 
@@ -73,16 +78,18 @@ private fun taskLineRegex(path: String? = null): Regex {
 }
 
 private fun assertTaskRun(result: BuildResult, path: String, outcomes: Set<TaskOutcome>): String {
-    val outcome = result.findTaskOutcome(path)
+    val taskOutcome = result.task(path)?.outcome
+    val parsedOutcome = result.findTaskOutcome(path)
 
     assertEquals(
-        result.task(path)?.outcome,
-        outcome,
-        "outcomes from output and build are mismatched. Output:\n\n${result.output}",
+        taskOutcome,
+        parsedOutcome,
+        "$path outcomes from output ($parsedOutcome) and build ($taskOutcome) are mismatched." +
+            "Output:\n\n${result.output}",
     )
     assertTrue(
-        outcome in outcomes,
-        "expected $path outcome in $outcomes, but was $outcome. Output:\n\n${result.output}",
+        taskOutcome in outcomes,
+        "expected $path outcome in $outcomes, but was $parsedOutcome. Output:\n\n${result.output}",
     )
 
     return result.findTaskOutput(path)
