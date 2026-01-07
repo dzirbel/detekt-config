@@ -2,14 +2,16 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import java.util.Properties
 
+val versionsFile = layout.projectDirectory.file("plugin/src/main/resources/versions.properties")
+val versions = providers.fileContents(versionsFile).asText
+    .map { text ->
+        Properties().apply { load(text.byteInputStream()) }
+    }
+extra["versions"] = versions
+
 subprojects {
     group = "io.github.dzirbel"
 
-    val versionsFile = rootProject.layout.projectDirectory.file("plugin/src/main/resources/versions.properties")
-    val versions = providers.fileContents(versionsFile).asText
-        .map { text ->
-            Properties().apply { load(text.byteInputStream()) }
-        }
     version = versions.map { it["rules"] }.get()
 
     tasks.withType<Test>().configureEach {

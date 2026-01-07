@@ -5,11 +5,7 @@ plugins {
     `maven-publish`
 }
 
-private val versionsFile = rootProject.layout.projectDirectory.file("plugin/src/main/resources/versions.properties")
-private val versions = providers.fileContents(versionsFile).asText
-    .map { text ->
-        Properties().apply { load(text.byteInputStream()) }
-    }
+private val versions = rootProject.extra["versions"] as Provider<Properties>
 private val detektVersion = versions.map { it["detekt"] }
 
 val kotlinPluginForTests = configurations.create("kotlinPluginForTests") {
