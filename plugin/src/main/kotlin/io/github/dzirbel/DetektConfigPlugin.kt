@@ -21,7 +21,7 @@ class DetektConfigPlugin : Plugin<Project> {
         target.dependencies {
             val versions = readResourceProperties("versions.properties")
 
-            add("detektPlugins", "io.github.dzirbel:detekt-config-rules:${versions["detekt-config-rules"]}")
+            add("detektPlugins", "io.github.dzirbel:rules:${versions["rules"]}")
             add("detektPlugins", "io.gitlab.arturbosch.detekt:detekt-formatting:${versions["detekt"]}")
 
             target.withCompose {

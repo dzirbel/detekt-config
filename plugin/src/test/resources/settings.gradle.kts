@@ -1,6 +1,6 @@
 includeBuild("../../../..") {
     dependencySubstitution {
-        substitute(module("io.github.dzirbel:detekt-config-rules")).using(project(":rules"))
+        substitute(module("io.github.dzirbel:rules")).using(project(":rules"))
     }
 }
 

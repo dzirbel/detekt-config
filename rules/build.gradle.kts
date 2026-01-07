@@ -22,7 +22,6 @@ dependencies {
 publishing {
     publications {
         create<MavenPublication>("rules") {
-            artifactId = "detekt-config-rules"
             from(components["java"])
         }
     }

@@ -10,7 +10,7 @@ subprojects {
         .map { text ->
             Properties().apply { load(text.byteInputStream()) }
         }
-    version = versions.map { it["detekt-config-rules"] }.get()
+    version = versions.map { it["rules"] }.get()
 
     tasks.withType<Test>().configureEach {
         testLogging {
