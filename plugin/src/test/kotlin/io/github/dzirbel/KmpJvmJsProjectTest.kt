@@ -2,7 +2,6 @@ package io.github.dzirbel
 
 import org.gradle.testkit.runner.GradleRunner
 import java.io.File
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertFalse
@@ -33,7 +32,6 @@ class KmpJvmJsProjectTest {
         assertFalse(jsOutput.contains(jvmFile.absolutePath))
     }
 
-    @Ignore("TODO: sharedMain sources are not yet included in detekt inputs")
     @Test
     fun `detekt includes shared source set`() {
         val result = GradleRunner.create()

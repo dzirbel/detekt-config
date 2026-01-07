@@ -6,7 +6,10 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
+import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.withType
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 
 class DetektConfigPlugin : Plugin<Project> {
     override fun apply(target: Project) {
@@ -63,11 +66,17 @@ private fun Project.configureDetektDefaultTask() {
     }
 
     pluginManager.withPlugin("org.jetbrains.kotlin.multiplatform") {
+        val kotlin = extensions.getByType<KotlinMultiplatformExtension>()
         afterEvaluate {
-            val commonMainDir = layout.projectDirectory.dir("src/commonMain/kotlin").asFile
             detektTypeResolutionTasks.configureEach {
-                if (commonMainDir.exists()) {
-                    source(commonMainDir)
+                val sourceSetName = detektTaskSourceSetName(name) ?: return@configureEach
+                val sourceSet = kotlin.sourceSets.findByName(sourceSetName) ?: return@configureEach
+                val sourceDirs = sourceSet.allDependsOnSourceSets()
+                    .flatMap { it.kotlin.srcDirs }
+                    .filter { it.exists() }
+                    .toSet()
+                if (sourceDirs.isNotEmpty()) {
+                    source(sourceDirs)
                 }
             }
         }
@@ -75,9 +84,7 @@ private fun Project.configureDetektDefaultTask() {
 }
 
 private fun Project.detektCompileClasspaths(taskName: String): List<org.gradle.api.artifacts.Configuration> = taskName
-    .removePrefix("detekt")
-    .takeIf { it.isNotBlank() }
-    ?.replaceFirstChar { it.lowercase() }
+    .let(::detektTaskSourceSetName)
     ?.let { sourceSetName ->
         if (sourceSetName == "main") {
             listOfNotNull(
@@ -89,3 +96,21 @@ private fun Project.detektCompileClasspaths(taskName: String): List<org.gradle.a
         }
     }
     ?: emptyList()
+
+private fun detektTaskSourceSetName(taskName: String): String? =
+    taskName
+        .removePrefix("detekt")
+        .takeIf { it.isNotBlank() }
+        ?.replaceFirstChar { it.lowercase() }
+
+private fun KotlinSourceSet.allDependsOnSourceSets(): Set<KotlinSourceSet> {
+    val visited = LinkedHashSet<KotlinSourceSet>()
+    val queue = ArrayDeque<KotlinSourceSet>()
+    queue.add(this)
+    while (queue.isNotEmpty()) {
+        val current = queue.removeFirst()
+        if (!visited.add(current)) continue
+        queue.addAll(current.dependsOn)
+    }
+    return visited
+}

@@ -9,7 +9,7 @@ class KmpNativeProjectTest {
 
     private val projectDir = File("src/test/resources/kmp-native")
     private val commonFile = projectDir.resolve("src/commonMain/kotlin/io/github/dzirbel/SampleCommon.kt")
-    // TODO detekt should also run on SampleNative in iosMain
+    private val iosMainFile = projectDir.resolve("src/iosMain/kotlin/io/github/dzirbel/SampleNative.kt")
     private val iosSimulatorArm64File =
         projectDir.resolve("src/iosSimulatorArm64Main/kotlin/io/github/dzirbel/SampleIosSimulatorArm64.kt")
     private val iosX64File = projectDir.resolve("src/iosX64Main/kotlin/io/github/dzirbel/SampleIosX64.kt")
@@ -47,6 +47,9 @@ class KmpNativeProjectTest {
         val output = assertTaskFailed(result, detektTaskName)
         assertVarCouldBeVal(output, commonFile)
         assertVarCouldBeVal(output, nativeFile)
+        if (isMac) {
+            assertVarCouldBeVal(output, iosMainFile)
+        }
     }
 
     private fun assertVarCouldBeVal(output: String, file: File) {
