@@ -1,16 +1,12 @@
 package io.github.dzirbel
 
 import org.gradle.testkit.runner.BuildResult
-import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 private val ansiRegex = Regex("\\u001B\\[[;\\d]*m")
-
-internal fun GradleRunner.withPlainConsole(vararg arguments: String): GradleRunner =
-    withArguments(*arguments, "--console=plain")
 
 internal fun assertTaskNotRun(result: BuildResult, path: String) {
     assertNull(result.findTaskLine(path))

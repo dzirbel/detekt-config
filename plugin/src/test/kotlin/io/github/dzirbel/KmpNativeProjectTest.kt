@@ -41,7 +41,7 @@ class KmpNativeProjectTest {
 
         val result = GradleRunner.create()
             .withProjectDir(projectDir)
-            .withPlainConsole(":kmp-native:detekt", "--continue")
+            .withArguments(":kmp-native:detekt", "--continue")
             .buildAndFail()
 
         val output = assertTaskFailed(result, detektTaskName)

@@ -13,6 +13,8 @@ kotlin {
         browser()
     }
 
+    applyDefaultHierarchyTemplate()
+
     sourceSets {
         val commonMain by getting
         val sharedMain by creating {

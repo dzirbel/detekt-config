@@ -20,7 +20,7 @@ class JsProjectTest {
     fun `check fails`() {
         val result = GradleRunner.create()
             .withProjectDir(projectDir)
-            .withPlainConsole("check")
+            .withArguments("check")
             .buildAndFail()
 
         // TODO doesn't depend on :js:compileKotlinJs, why?
@@ -33,7 +33,7 @@ class JsProjectTest {
     fun `detekt fails`() {
         val result = GradleRunner.create()
             .withProjectDir(projectDir)
-            .withPlainConsole("detekt")
+            .withArguments("detekt")
             .buildAndFail()
 
         // TODO doesn't depend on :js:compileKotlinJs, why?
