@@ -1,2 +1,6 @@
 [versions]
+assertj = "3.25.3"
 kotlin = "2.3.0"
+
+[libraries]
+assertj = { module = "org.assertj:assertj-core", version.ref = "assertj" }

@@ -1,4 +1,3 @@
-import org.gradle.api.provider.Provider
 import java.util.Properties
 
 plugins {
@@ -14,6 +13,7 @@ dependencies {
 
     testImplementation(kotlin("test"))
     testImplementation("io.gitlab.arturbosch.detekt:detekt-test:${detektVersion.get()}")
+    testImplementation(libs.assertj)
 }
 
 publishing {
