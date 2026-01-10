@@ -3,8 +3,6 @@ package io.github.dzirbel
 import org.gradle.testkit.runner.GradleRunner
 import java.io.File
 import kotlin.test.Test
-import kotlin.test.assertContains
-import kotlin.test.assertFalse
 
 class KmpJvmJsProjectTest {
 
@@ -18,35 +16,16 @@ class KmpJvmJsProjectTest {
     fun `check runs detekt for kmp jvm and js`() {
         val result = GradleRunner.create()
             .withProjectDir(projectDir)
-            .withArguments(":kmp-jvm-js:check", "--continue")
+            .withArguments("check", "--continue")
             .buildAndFail()
 
-        val jvmOutput = assertTaskFailed(result, ":kmp-jvm-js:detektJvmMain")
-        assertVarCouldBeVal(jvmOutput, commonFile)
-        assertVarCouldBeVal(jvmOutput, jvmFile)
-        assertFalse(jvmOutput.contains(jsFile.absolutePath))
-
-        val jsOutput = assertTaskFailed(result, ":kmp-jvm-js:detektJsMain")
-        assertVarCouldBeVal(jsOutput, commonFile)
-        assertVarCouldBeVal(jsOutput, jsFile)
-        assertFalse(jsOutput.contains(jvmFile.absolutePath))
-    }
-
-    @Test
-    fun `detekt includes shared source set`() {
-        val result = GradleRunner.create()
-            .withProjectDir(projectDir)
-            .withArguments(":kmp-jvm-js:check", "--continue")
-            .buildAndFail()
+        assertTaskPassed(result, ":kmp-jvm-js:compileKotlinJvm")
+        assertTaskPassed(result, ":kmp-jvm-js:compileKotlinJs")
+        assertTaskNotRun(result, ":kmp-jvm-js:check")
 
         val jvmOutput = assertTaskFailed(result, ":kmp-jvm-js:detektJvmMain")
-        assertVarCouldBeVal(jvmOutput, sharedFile)
-
         val jsOutput = assertTaskFailed(result, ":kmp-jvm-js:detektJsMain")
-        assertVarCouldBeVal(jsOutput, sharedFile)
-    }
-
-    private fun assertVarCouldBeVal(output: String, file: File) {
-        assertContains(output, "${file.absolutePath}:4:5: Variable 'x' could be val. [VarCouldBeVal]")
+        assertSameContents(expectedWarnings(commonFile, sharedFile, jvmFile), jvmOutput)
+        assertSameContents(expectedWarnings(commonFile, sharedFile, jsFile), jsOutput)
     }
 }

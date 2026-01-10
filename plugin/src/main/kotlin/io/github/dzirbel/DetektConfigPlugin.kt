@@ -4,11 +4,15 @@ import io.gitlab.arturbosch.detekt.Detekt
 import io.gitlab.arturbosch.detekt.extensions.DetektExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.file.FileCollection
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.withType
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 
 class DetektConfigPlugin : Plugin<Project> {
@@ -38,29 +42,60 @@ class DetektConfigPlugin : Plugin<Project> {
 
 private fun Project.configureDetektDefaultTask() {
     val detektMainTasks = tasks.withType<Detekt>()
-        .matching { it.name != "detekt" && it.name.startsWith("detekt") && it.name.endsWith("Main") }
-    val detektTypeResolutionTasks = detektMainTasks
-        .matching { !it.name.contains("Metadata") }
+        .matching {
+            it.name != "detekt" &&
+                it.name.startsWith("detekt") &&
+                it.name.endsWith("Main") &&
+                !it.name.contains("Metadata")
+        }
 
     tasks.named("detekt").configure {
-        dependsOn(detektTypeResolutionTasks)
-        onlyIf { detektTypeResolutionTasks.isNotEmpty() }
+        dependsOn(detektMainTasks)
+        onlyIf { detektMainTasks.isNotEmpty() }
     }
 
     afterEvaluate {
-        detektTypeResolutionTasks.configureEach {
-            val compileClasspaths = detektCompileClasspaths(name)
-            if (compileClasspaths.isNotEmpty()) {
-                compileClasspaths.forEach { classpath.from(it) }
-            }
-            if ((compileClasspaths.isEmpty() || compileClasspaths.all { it.files.isEmpty() }) && classpath.isEmpty) {
-                classpath.from(detektClasspath)
-            }
-            val kotlinStdlibFiles = classpath.files.filter { it.name.startsWith("kotlin-stdlib") }
-            if (kotlinStdlibFiles.any { it.name.contains("-2.") }) {
-                val filteredClasspath = classpath.filter { !it.name.startsWith("kotlin-stdlib") }
-                classpath.setFrom(filteredClasspath)
-                classpath.from(detektClasspath)
+        detektMainTasks.configureEach {
+            val compilation = detektTaskCompilation(name)
+            if (compilation != null) {
+                dependsOn(compilation.compileKotlinTaskName)
+                detektJavaCompileTaskName(name)?.let { javaTaskName ->
+                    tasks.findByName(javaTaskName)?.let { dependsOn(it) }
+                }
+                classpath.setFrom(
+                    providers.provider {
+                        val rawFiles = buildList {
+                            addAll(compilation.output.classesDirs.files)
+                            if (compilation.platformType != KotlinPlatformType.native) {
+                                addAll(compilation.compileDependencyFiles.files)
+                            }
+                        }
+                        val filteredFiles = rawFiles.filter(::isNotKotlinStdlib2)
+                        val needsDetektClasspath = compilation.platformType == KotlinPlatformType.native ||
+                            filteredFiles.isEmpty() ||
+                            rawFiles.any(::isKotlinStdlib2)
+                        if (needsDetektClasspath) {
+                            filteredFiles + detektClasspath.files
+                        } else {
+                            filteredFiles
+                        }
+                    }
+                )
+            } else {
+                val taskClasspaths = detektCompileClasspaths(name)
+                if (taskClasspaths.isNotEmpty()) {
+                    classpath.setFrom(taskClasspaths.map { it.filter(::isNotKotlinStdlib2) })
+                    classpath.from(
+                        providers.provider {
+                            val hasKotlinStdlib2 = taskClasspaths.any { collection ->
+                                collection.files.any(::isKotlinStdlib2)
+                            }
+                            if (hasKotlinStdlib2) detektClasspath.files else emptyList()
+                        }
+                    )
+                } else if (classpath.isEmpty) {
+                    classpath.from(detektClasspath)
+                }
             }
         }
     }
@@ -68,7 +103,7 @@ private fun Project.configureDetektDefaultTask() {
     pluginManager.withPlugin("org.jetbrains.kotlin.multiplatform") {
         val kotlin = extensions.getByType<KotlinMultiplatformExtension>()
         afterEvaluate {
-            detektTypeResolutionTasks.configureEach {
+            detektMainTasks.configureEach {
                 val sourceSetName = detektTaskSourceSetName(name) ?: return@configureEach
                 val sourceSet = kotlin.sourceSets.findByName(sourceSetName) ?: return@configureEach
                 val sourceDirs = sourceSet.allDependsOnSourceSets()
@@ -83,7 +118,21 @@ private fun Project.configureDetektDefaultTask() {
     }
 }
 
-private fun Project.detektCompileClasspaths(taskName: String): List<org.gradle.api.artifacts.Configuration> = taskName
+private fun Project.detektTaskCompilation(taskName: String): KotlinCompilation<*>? {
+    val sourceSetName = detektTaskSourceSetName(taskName) ?: return null
+    extensions.findByType(KotlinMultiplatformExtension::class.java)?.let { kotlin ->
+        return kotlin.targets
+            .asSequence()
+            .flatMap { it.compilations.asSequence() }
+            .firstOrNull { it.defaultSourceSet.name == sourceSetName }
+    }
+    extensions.findByType(KotlinJvmProjectExtension::class.java)?.let { kotlin ->
+        return kotlin.target.compilations.firstOrNull { it.defaultSourceSet.name == sourceSetName }
+    }
+    return null
+}
+
+private fun Project.detektCompileClasspaths(taskName: String): List<FileCollection> = taskName
     .let(::detektTaskSourceSetName)
     ?.let { sourceSetName ->
         if (sourceSetName == "main") {
@@ -102,6 +151,20 @@ private fun detektTaskSourceSetName(taskName: String): String? =
         .removePrefix("detekt")
         .takeIf { it.isNotBlank() }
         ?.replaceFirstChar { it.lowercase() }
+
+private fun detektJavaCompileTaskName(taskName: String): String? {
+    val sourceSetName = detektTaskSourceSetName(taskName) ?: return null
+    return if (sourceSetName == "main") {
+        "compileJava"
+    } else {
+        "compile${sourceSetName.replaceFirstChar { it.uppercase() }}Java"
+    }
+}
+
+private fun isKotlinStdlib2(file: java.io.File): Boolean =
+    file.name.startsWith("kotlin-stdlib") && file.name.contains("-2.")
+
+private fun isNotKotlinStdlib2(file: java.io.File): Boolean = !isKotlinStdlib2(file)
 
 private fun KotlinSourceSet.allDependsOnSourceSets(): Set<KotlinSourceSet> {
     val visited = LinkedHashSet<KotlinSourceSet>()

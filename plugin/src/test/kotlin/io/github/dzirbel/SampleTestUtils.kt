@@ -2,6 +2,7 @@ package io.github.dzirbel
 
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
+import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -13,22 +14,39 @@ internal fun assertTaskNotRun(result: BuildResult, path: String) {
     assertNull(result.task(path))
 }
 
-internal fun assertTaskFailed(result: BuildResult, path: String): String {
+internal fun assertTaskFailed(result: BuildResult, path: String): List<String> {
     return assertTaskRun(result, path, setOf(TaskOutcome.FAILED))
 }
 
-internal fun assertTaskPassed(result: BuildResult, path: String): String {
+internal fun assertTaskPassed(result: BuildResult, path: String): List<String> {
     return assertTaskRun(result, path, setOf(TaskOutcome.SUCCESS, TaskOutcome.UP_TO_DATE, TaskOutcome.FROM_CACHE))
+}
+
+internal fun <T : Comparable<T>> assertSameContents(expected: Iterable<T>, actual: Iterable<T>) {
+    assertEquals(expected.sorted(), actual.sorted())
+}
+
+internal fun expectedWarnings(vararg files: File): Iterable<String> {
+    return files.flatMap { file ->
+        val path = file.absolutePath
+        listOf(
+            "$path:4:5: Variable x is declared as `var` with a mutable type kotlin.collections.MutableSet. " +
+                "Consider using `val` or an immutable collection or value type [DoubleMutabilityForCollection]",
+            "$path:5:5: The method `kotlin.io.println` has been forbidden: println does not allow you to configure " +
+                "the output stream. Use a logger instead. [ForbiddenMethodCall]",
+            "$path:4:5: Variable 'x' could be val. [VarCouldBeVal]",
+        )
+    }
 }
 
 private fun BuildResult.outputLines(): Sequence<String> =
     output.lineSequence().map { line -> line.replace(ansiRegex, "").trimEnd('\r') }
 
-private fun BuildResult.findTaskOutput(path: String): String {
+private fun BuildResult.findTaskOutput(path: String): List<String> {
     val lines = outputLines().toList()
     val matcher = taskLineRegex(path)
     val startIndex = lines.indexOfFirst { line -> matcher.containsMatchIn(line) }
-    if (startIndex == -1) return ""
+    if (startIndex == -1) return emptyList()
     return buildList {
         var i = startIndex + 1
         var hasOutput = false
@@ -44,7 +62,7 @@ private fun BuildResult.findTaskOutput(path: String): String {
             hasOutput = true
             i++
         }
-    }.joinToString(separator = "\n")
+    }
 }
 
 private fun BuildResult.findTaskLines(path: String): Sequence<String> =
@@ -77,7 +95,7 @@ private fun taskLineRegex(path: String? = null): Regex {
     return Regex("> Task$suffix(?:\\s|\$)")
 }
 
-private fun assertTaskRun(result: BuildResult, path: String, outcomes: Set<TaskOutcome>): String {
+private fun assertTaskRun(result: BuildResult, path: String, outcomes: Set<TaskOutcome>): List<String> {
     val taskOutcome = result.task(path)?.outcome
     val parsedOutcome = result.findTaskOutcome(path)
 

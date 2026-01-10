@@ -8,10 +8,15 @@ findings.
 Key points for this repository:
 - Detekt tasks (e.g., detektMain/detektJsMain) are created by the detekt Gradle plugin. For JVM targets, the plugin
   sets the detekt task classpath to the Kotlin compilation output + compile dependency files.
-- For multiplatform targets, type resolution is only enabled for JVM/Android targets. JS/common tasks can run without
-  type resolution.
+- Detekt's multiplatform integration only enables type resolution for JVM/Android targets by default; this repo opts
+  into type resolution for all detekt main tasks (including JS/native) by wiring compilation outputs and dependency
+  files into the detekt task classpath.
 - The plugin logic in this repo augments detekt tasks after evaluation:
-  - It adds the relevant compile classpath when available.
+  - It adds compilation output + compile dependency files when available (falling back to compile classpath
+    configurations when no compilation is found).
+  - Native targets skip compile dependency files (to avoid early Kotlin/Native distribution resolution); they use
+    compilation outputs plus detekt's classpath to keep type resolution on.
+  - It adds explicit dependencies on the Kotlin and Java compilation tasks so detekt runs after compilation.
   - It falls back to the detekt CLI classpath if the compile classpath is missing or empty.
   - It filters out Kotlin 2.x stdlib jars from the detekt task classpath and falls back to detekt's own classpath,
     which is aligned to the detekt/Kotlin version it bundles. This avoids Kotlin version mismatch during analysis.
