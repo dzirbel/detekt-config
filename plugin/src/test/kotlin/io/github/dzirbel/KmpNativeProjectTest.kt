@@ -1,6 +1,5 @@
 package io.github.dzirbel
 
-import org.gradle.testkit.runner.GradleRunner
 import java.io.File
 import kotlin.test.Test
 
@@ -10,10 +9,7 @@ class KmpNativeProjectTest {
 
     @Test
     fun `compilation succeeds`() {
-        GradleRunner.create()
-            .withProjectDir(projectDir)
-            .withArguments("assemble")
-            .build()
+        projectDir.gradle("assemble").build()
     }
 
     // TODO run tests
@@ -21,11 +17,7 @@ class KmpNativeProjectTest {
     @Test
     fun `check fails`() {
         val expectation = nativeExpectation()
-
-        val result = GradleRunner.create()
-            .withProjectDir(projectDir)
-            .withArguments("check", "--continue")
-            .buildAndFail()
+        val result = projectDir.gradle("check").buildAndFail()
 
         assertTaskPassed(result, expectation.compileTaskName)
         assertTaskPassed(result, expectation.compileTestTaskName)
@@ -41,11 +33,7 @@ class KmpNativeProjectTest {
     @Test
     fun `detekt fails`() {
         val expectation = nativeExpectation()
-
-        val result = GradleRunner.create()
-            .withProjectDir(projectDir)
-            .withArguments("detekt", "--continue")
-            .buildAndFail()
+        val result = projectDir.gradle("detekt").buildAndFail()
 
         assertTaskPassed(result, expectation.compileTaskName)
         assertTaskPassed(result, expectation.compileTestTaskName)

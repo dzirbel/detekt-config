@@ -1,6 +1,7 @@
 package io.github.dzirbel
 
 import org.gradle.testkit.runner.BuildResult
+import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import java.io.File
 import kotlin.test.assertEquals
@@ -8,6 +9,12 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 private val ansiRegex = Regex("\\u001B\\[[;\\d]*m")
+
+internal fun File.gradle(task: String): GradleRunner {
+    return GradleRunner.create()
+        .withProjectDir(this)
+        .withArguments(task, "--continue")
+}
 
 internal fun assertTaskNotRun(result: BuildResult, path: String) {
     assertNull(result.findTaskOutcome(path))

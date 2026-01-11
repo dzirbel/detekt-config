@@ -1,6 +1,5 @@
 package io.github.dzirbel
 
-import org.gradle.testkit.runner.GradleRunner
 import java.io.File
 import kotlin.test.Test
 
@@ -18,26 +17,17 @@ class KmpJvmJsProjectTest {
 
     @Test
     fun `compilation succeeds`() {
-        GradleRunner.create()
-            .withProjectDir(projectDir)
-            .withArguments("assemble")
-            .build()
+        projectDir.gradle("assemble").build()
     }
 
     @Test
     fun `jvm tests succeed`() {
-        GradleRunner.create()
-            .withProjectDir(projectDir)
-            .withArguments("jvmTest")
-            .build()
+        projectDir.gradle("jvmTest").build()
     }
 
     @Test
     fun `check fails`() {
-        val result = GradleRunner.create()
-            .withProjectDir(projectDir)
-            .withArguments("check", "--continue")
-            .buildAndFail()
+        val result = projectDir.gradle("check").buildAndFail()
 
         assertTaskPassed(result, ":kmp-jvm-js:compileKotlinJvm")
         assertTaskPassed(result, ":kmp-jvm-js:compileKotlinJs")
@@ -65,10 +55,7 @@ class KmpJvmJsProjectTest {
 
     @Test
     fun `detekt fails`() {
-        val result = GradleRunner.create()
-            .withProjectDir(projectDir)
-            .withArguments("detekt", "--continue")
-            .buildAndFail()
+        val result = projectDir.gradle("detekt").buildAndFail()
 
         assertTaskPassed(result, ":kmp-jvm-js:compileKotlinJvm")
         assertTaskPassed(result, ":kmp-jvm-js:compileKotlinJs")

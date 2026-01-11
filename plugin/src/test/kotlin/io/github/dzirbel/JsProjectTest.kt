@@ -1,6 +1,5 @@
 package io.github.dzirbel
 
-import org.gradle.testkit.runner.GradleRunner
 import java.io.File
 import kotlin.test.Test
 
@@ -13,18 +12,12 @@ class JsProjectTest {
 
     @Test
     fun `compilation succeeds`() {
-        GradleRunner.create()
-            .withProjectDir(projectDir)
-            .withArguments("assemble")
-            .build()
+        projectDir.gradle("assemble").build()
     }
 
     @Test
     fun `check fails`() {
-        val result = GradleRunner.create()
-            .withProjectDir(projectDir)
-            .withArguments("check", "--continue")
-            .buildAndFail()
+        val result = projectDir.gradle("check").buildAndFail()
 
         assertTaskPassed(result, ":js:compileKotlinJs")
         assertTaskPassed(result, ":js:compileTestKotlinJs")
@@ -41,10 +34,7 @@ class JsProjectTest {
 
     @Test
     fun `detekt fails`() {
-        val result = GradleRunner.create()
-            .withProjectDir(projectDir)
-            .withArguments("detekt", "--continue")
-            .buildAndFail()
+        val result = projectDir.gradle("detekt").buildAndFail()
 
         assertTaskPassed(result, ":js:compileKotlinJs")
         assertTaskPassed(result, ":js:compileTestKotlinJs")
