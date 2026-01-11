@@ -12,7 +12,13 @@ class KmpNativeProjectTest {
         projectDir.gradle("assemble").build()
     }
 
-    // TODO run tests
+    @Test
+    fun `tests succeed`() {
+        val targets = nativeTargets()
+        for (target in targets) {
+            projectDir.gradle(target.testTaskName).build()
+        }
+    }
 
     @Test
     fun `check fails`() {
@@ -80,6 +86,7 @@ class KmpNativeProjectTest {
                     detektTestTaskName = ":kmp-native:detektIosArm64Test",
                     compileTaskName = ":kmp-native:compileKotlinIosArm64",
                     compileTestTaskName = ":kmp-native:compileTestKotlinIosArm64",
+                    testTaskName = ":kmp-native:iosArm64Test",
                 ),
                 NativeTarget(
                     mainFiles = listOf(commonFile, iosMainFile, iosSimulatorArm64MainFile),
@@ -88,6 +95,7 @@ class KmpNativeProjectTest {
                     detektTestTaskName = ":kmp-native:detektIosSimulatorArm64Test",
                     compileTaskName = ":kmp-native:compileKotlinIosSimulatorArm64",
                     compileTestTaskName = ":kmp-native:compileTestKotlinIosSimulatorArm64",
+                    testTaskName = ":kmp-native:iosSimulatorArm64Test",
                 ),
                 NativeTarget(
                     mainFiles = listOf(commonFile, iosMainFile, iosX64MainFile),
@@ -96,6 +104,7 @@ class KmpNativeProjectTest {
                     detektTestTaskName = ":kmp-native:detektIosX64Test",
                     compileTaskName = ":kmp-native:compileKotlinIosX64",
                     compileTestTaskName = ":kmp-native:compileTestKotlinIosX64",
+                    testTaskName = ":kmp-native:iosX64Test",
                 ),
             )
 
@@ -113,6 +122,7 @@ class KmpNativeProjectTest {
                     detektTestTaskName = ":kmp-native:detektMingwX64Test",
                     compileTaskName = ":kmp-native:compileKotlinMingwX64",
                     compileTestTaskName = ":kmp-native:compileTestKotlinMingwX64",
+                    testTaskName = ":kmp-native:mingwX64Test",
                 ),
             )
 
@@ -130,6 +140,7 @@ class KmpNativeProjectTest {
                     detektTestTaskName = ":kmp-native:detektLinuxArm64Test",
                     compileTaskName = ":kmp-native:compileKotlinLinuxArm64",
                     compileTestTaskName = ":kmp-native:compileTestKotlinLinuxArm64",
+                    testTaskName = ":kmp-native:linuxArm64Test",
                 ),
             )
 
@@ -147,6 +158,7 @@ class KmpNativeProjectTest {
                     detektTestTaskName = ":kmp-native:detektLinuxX64Test",
                     compileTaskName = ":kmp-native:compileKotlinLinuxX64",
                     compileTestTaskName = ":kmp-native:compileTestKotlinLinuxX64",
+                    testTaskName = ":kmp-native:linuxX64Test",
                 ),
             )
         }
@@ -159,6 +171,7 @@ class KmpNativeProjectTest {
         val detektTestTaskName: String,
         val compileTaskName: String,
         val compileTestTaskName: String,
+        val testTaskName: String,
     ) {
         val failedTasks = listOf(detektTaskName, detektTestTaskName)
     }
