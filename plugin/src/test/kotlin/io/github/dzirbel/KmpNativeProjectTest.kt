@@ -86,7 +86,7 @@ class KmpNativeProjectTest {
                     detektTestTaskName = ":kmp-native:detektIosArm64Test",
                     compileTaskName = ":kmp-native:compileKotlinIosArm64",
                     compileTestTaskName = ":kmp-native:compileTestKotlinIosArm64",
-                    testTaskName = ":kmp-native:iosArm64Test",
+                    testTaskName = ":kmp-native:iosArm64TestBinaries",
                 ),
                 NativeTarget(
                     mainFiles = listOf(commonFile, iosMainFile, iosSimulatorArm64MainFile),
