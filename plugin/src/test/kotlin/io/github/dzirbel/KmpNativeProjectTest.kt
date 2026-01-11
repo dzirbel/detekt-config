@@ -16,37 +16,43 @@ class KmpNativeProjectTest {
 
     @Test
     fun `check fails`() {
-        val expectation = nativeExpectation()
+        val targets = nativeTargets()
         val result = projectDir.gradle("check").buildAndFail()
 
-        assertTaskPassed(result, expectation.compileTaskName)
-        assertTaskPassed(result, expectation.compileTestTaskName)
         assertTaskNotRun(result, ":kmp-native:check")
-        assertFailedTasks(result, expectation.detektTaskName, expectation.detektTestTaskName)
+        assertFailedTasks(result, *targets.flatMap { it.failedTasks }.toTypedArray())
 
-        val mainOutput = assertTaskFailed(result, expectation.detektTaskName)
-        val testOutput = assertTaskFailed(result, expectation.detektTestTaskName)
-        assertSameContents(expectedWarnings(*expectation.mainFiles.toTypedArray()), mainOutput)
-        assertSameContents(expectedTestWarnings(*expectation.testFiles.toTypedArray()), testOutput)
+        for (target in targets) {
+            assertTaskPassed(result, target.compileTaskName)
+            assertTaskPassed(result, target.compileTestTaskName)
+
+            val mainOutput = assertTaskFailed(result, target.detektTaskName)
+            val testOutput = assertTaskFailed(result, target.detektTestTaskName)
+            assertSameContents(expectedWarnings(*target.mainFiles.toTypedArray()), mainOutput)
+            assertSameContents(expectedTestWarnings(*target.testFiles.toTypedArray()), testOutput)
+        }
     }
 
     @Test
     fun `detekt fails`() {
-        val expectation = nativeExpectation()
+        val targets = nativeTargets()
         val result = projectDir.gradle("detekt").buildAndFail()
 
-        assertTaskPassed(result, expectation.compileTaskName)
-        assertTaskPassed(result, expectation.compileTestTaskName)
         assertTaskNotRun(result, ":kmp-native:detekt")
-        assertFailedTasks(result, expectation.detektTaskName, expectation.detektTestTaskName)
+        assertFailedTasks(result, *targets.flatMap { it.failedTasks }.toTypedArray())
 
-        val mainOutput = assertTaskFailed(result, expectation.detektTaskName)
-        val testOutput = assertTaskFailed(result, expectation.detektTestTaskName)
-        assertSameContents(expectedWarnings(*expectation.mainFiles.toTypedArray()), mainOutput)
-        assertSameContents(expectedTestWarnings(*expectation.testFiles.toTypedArray()), testOutput)
+        for (target in targets) {
+            assertTaskPassed(result, target.compileTaskName)
+            assertTaskPassed(result, target.compileTestTaskName)
+
+            val mainOutput = assertTaskFailed(result, target.detektTaskName)
+            val testOutput = assertTaskFailed(result, target.detektTestTaskName)
+            assertSameContents(expectedWarnings(*target.mainFiles.toTypedArray()), mainOutput)
+            assertSameContents(expectedTestWarnings(*target.testFiles.toTypedArray()), testOutput)
+        }
     }
 
-    private fun nativeExpectation(): NativeExpectation {
+    private fun nativeTargets(): List<NativeTarget> {
         val osName = System.getProperty("os.name")
         val osArch = System.getProperty("os.arch")
         val isMac = osName.contains("Mac", ignoreCase = true)
@@ -56,95 +62,104 @@ class KmpNativeProjectTest {
         val srcDir = projectDir.resolve("src")
         val commonFile = srcDir.resolve("commonMain/kotlin/io/github/dzirbel/SampleCommon.kt")
         val commonTestFile = srcDir.resolve("commonTest/kotlin/io/github/dzirbel/SampleCommonTest.kt")
+        val iosMainFile = srcDir.resolve("iosMain/kotlin/io/github/dzirbel/SampleNative.kt")
+        val iosTestFile = srcDir.resolve("iosTest/kotlin/io/github/dzirbel/SampleIosTest.kt")
+        val iosSimulatorArm64MainFile =
+            srcDir.resolve("iosSimulatorArm64Main/kotlin/io/github/dzirbel/SampleIosSimulatorArm64.kt")
+        val iosSimulatorArm64TestFile =
+            srcDir.resolve("iosSimulatorArm64Test/kotlin/io/github/dzirbel/SampleIosSimulatorArm64Test.kt")
+        val iosX64MainFile = srcDir.resolve("iosX64Main/kotlin/io/github/dzirbel/SampleIosX64.kt")
+        val iosX64TestFile = srcDir.resolve("iosX64Test/kotlin/io/github/dzirbel/SampleIosX64Test.kt")
 
         return when {
-            isMac && isArm64 -> NativeExpectation(
-                mainFiles = listOf(
-                    commonFile,
-                    srcDir.resolve("iosMain/kotlin/io/github/dzirbel/SampleNative.kt"),
-                    srcDir.resolve("iosSimulatorArm64Main/kotlin/io/github/dzirbel/SampleIosSimulatorArm64.kt"),
+            isMac -> listOf(
+                NativeTarget(
+                    mainFiles = listOf(commonFile, iosMainFile),
+                    testFiles = listOf(commonTestFile, iosTestFile),
+                    detektTaskName = ":kmp-native:detektIosArm64Main",
+                    detektTestTaskName = ":kmp-native:detektIosArm64Test",
+                    compileTaskName = ":kmp-native:compileKotlinIosArm64",
+                    compileTestTaskName = ":kmp-native:compileTestKotlinIosArm64",
                 ),
-                testFiles = listOf(
-                    commonTestFile,
-                    srcDir.resolve("iosTest/kotlin/io/github/dzirbel/SampleIosTest.kt"),
-                    srcDir.resolve("iosSimulatorArm64Test/kotlin/io/github/dzirbel/SampleIosSimulatorArm64Test.kt"),
+                NativeTarget(
+                    mainFiles = listOf(commonFile, iosMainFile, iosSimulatorArm64MainFile),
+                    testFiles = listOf(commonTestFile, iosTestFile, iosSimulatorArm64TestFile),
+                    detektTaskName = ":kmp-native:detektIosSimulatorArm64Main",
+                    detektTestTaskName = ":kmp-native:detektIosSimulatorArm64Test",
+                    compileTaskName = ":kmp-native:compileKotlinIosSimulatorArm64",
+                    compileTestTaskName = ":kmp-native:compileTestKotlinIosSimulatorArm64",
                 ),
-                detektTaskName = ":kmp-native:detektIosSimulatorArm64Main",
-                detektTestTaskName = ":kmp-native:detektIosSimulatorArm64Test",
-                compileTaskName = ":kmp-native:compileKotlinIosSimulatorArm64",
-                compileTestTaskName = ":kmp-native:compileTestKotlinIosSimulatorArm64",
+                NativeTarget(
+                    mainFiles = listOf(commonFile, iosMainFile, iosX64MainFile),
+                    testFiles = listOf(commonTestFile, iosTestFile, iosX64TestFile),
+                    detektTaskName = ":kmp-native:detektIosX64Main",
+                    detektTestTaskName = ":kmp-native:detektIosX64Test",
+                    compileTaskName = ":kmp-native:compileKotlinIosX64",
+                    compileTestTaskName = ":kmp-native:compileTestKotlinIosX64",
+                ),
             )
 
-            isMac -> NativeExpectation(
-                mainFiles = listOf(
-                    commonFile,
-                    srcDir.resolve("iosMain/kotlin/io/github/dzirbel/SampleNative.kt"),
-                    srcDir.resolve("iosX64Main/kotlin/io/github/dzirbel/SampleIosX64.kt"),
+            isWindows -> listOf(
+                NativeTarget(
+                    mainFiles = listOf(
+                        commonFile,
+                        srcDir.resolve("mingwX64Main/kotlin/io/github/dzirbel/SampleMingw.kt"),
+                    ),
+                    testFiles = listOf(
+                        commonTestFile,
+                        srcDir.resolve("mingwX64Test/kotlin/io/github/dzirbel/SampleMingwTest.kt"),
+                    ),
+                    detektTaskName = ":kmp-native:detektMingwX64Main",
+                    detektTestTaskName = ":kmp-native:detektMingwX64Test",
+                    compileTaskName = ":kmp-native:compileKotlinMingwX64",
+                    compileTestTaskName = ":kmp-native:compileTestKotlinMingwX64",
                 ),
-                testFiles = listOf(
-                    commonTestFile,
-                    srcDir.resolve("iosTest/kotlin/io/github/dzirbel/SampleIosTest.kt"),
-                    srcDir.resolve("iosX64Test/kotlin/io/github/dzirbel/SampleIosX64Test.kt"),
-                ),
-                detektTaskName = ":kmp-native:detektIosX64Main",
-                detektTestTaskName = ":kmp-native:detektIosX64Test",
-                compileTaskName = ":kmp-native:compileKotlinIosX64",
-                compileTestTaskName = ":kmp-native:compileTestKotlinIosX64",
             )
 
-            isWindows -> NativeExpectation(
-                mainFiles = listOf(
-                    commonFile,
-                    srcDir.resolve("mingwX64Main/kotlin/io/github/dzirbel/SampleMingw.kt"),
+            isArm64 -> listOf(
+                NativeTarget(
+                    mainFiles = listOf(
+                        commonFile,
+                        srcDir.resolve("linuxArm64Main/kotlin/io/github/dzirbel/SampleLinuxArm64.kt"),
+                    ),
+                    testFiles = listOf(
+                        commonTestFile,
+                        srcDir.resolve("linuxArm64Test/kotlin/io/github/dzirbel/SampleLinuxArm64Test.kt"),
+                    ),
+                    detektTaskName = ":kmp-native:detektLinuxArm64Main",
+                    detektTestTaskName = ":kmp-native:detektLinuxArm64Test",
+                    compileTaskName = ":kmp-native:compileKotlinLinuxArm64",
+                    compileTestTaskName = ":kmp-native:compileTestKotlinLinuxArm64",
                 ),
-                testFiles = listOf(
-                    commonTestFile,
-                    srcDir.resolve("mingwX64Test/kotlin/io/github/dzirbel/SampleMingwTest.kt"),
-                ),
-                detektTaskName = ":kmp-native:detektMingwX64Main",
-                detektTestTaskName = ":kmp-native:detektMingwX64Test",
-                compileTaskName = ":kmp-native:compileKotlinMingwX64",
-                compileTestTaskName = ":kmp-native:compileTestKotlinMingwX64",
             )
 
-            isArm64 -> NativeExpectation(
-                mainFiles = listOf(
-                    commonFile,
-                    srcDir.resolve("linuxArm64Main/kotlin/io/github/dzirbel/SampleLinuxArm64.kt"),
+            else -> listOf(
+                NativeTarget(
+                    mainFiles = listOf(
+                        commonFile,
+                        srcDir.resolve("linuxX64Main/kotlin/io/github/dzirbel/SampleLinux.kt"),
+                    ),
+                    testFiles = listOf(
+                        commonTestFile,
+                        srcDir.resolve("linuxX64Test/kotlin/io/github/dzirbel/SampleLinuxTest.kt"),
+                    ),
+                    detektTaskName = ":kmp-native:detektLinuxX64Main",
+                    detektTestTaskName = ":kmp-native:detektLinuxX64Test",
+                    compileTaskName = ":kmp-native:compileKotlinLinuxX64",
+                    compileTestTaskName = ":kmp-native:compileTestKotlinLinuxX64",
                 ),
-                testFiles = listOf(
-                    commonTestFile,
-                    srcDir.resolve("linuxArm64Test/kotlin/io/github/dzirbel/SampleLinuxArm64Test.kt"),
-                ),
-                detektTaskName = ":kmp-native:detektLinuxArm64Main",
-                detektTestTaskName = ":kmp-native:detektLinuxArm64Test",
-                compileTaskName = ":kmp-native:compileKotlinLinuxArm64",
-                compileTestTaskName = ":kmp-native:compileTestKotlinLinuxArm64",
-            )
-
-            else -> NativeExpectation(
-                mainFiles = listOf(
-                    commonFile,
-                    srcDir.resolve("linuxX64Main/kotlin/io/github/dzirbel/SampleLinux.kt"),
-                ),
-                testFiles = listOf(
-                    commonTestFile,
-                    srcDir.resolve("linuxX64Test/kotlin/io/github/dzirbel/SampleLinuxTest.kt"),
-                ),
-                detektTaskName = ":kmp-native:detektLinuxX64Main",
-                detektTestTaskName = ":kmp-native:detektLinuxX64Test",
-                compileTaskName = ":kmp-native:compileKotlinLinuxX64",
-                compileTestTaskName = ":kmp-native:compileTestKotlinLinuxX64",
             )
         }
     }
 
-    private data class NativeExpectation(
+    private data class NativeTarget(
         val mainFiles: List<File>,
         val testFiles: List<File>,
         val detektTaskName: String,
         val detektTestTaskName: String,
         val compileTaskName: String,
         val compileTestTaskName: String,
-    )
+    ) {
+        val failedTasks = listOf(detektTaskName, detektTestTaskName)
+    }
 }
