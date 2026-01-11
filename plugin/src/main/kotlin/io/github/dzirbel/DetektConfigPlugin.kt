@@ -41,21 +41,21 @@ class DetektConfigPlugin : Plugin<Project> {
 }
 
 private fun Project.configureDetektDefaultTask() {
-    val detektMainTasks = tasks.withType<Detekt>()
+    val detektSourceSetTasks = tasks.withType<Detekt>()
         .matching {
             it.name != "detekt" &&
                 it.name.startsWith("detekt") &&
-                it.name.endsWith("Main") &&
+                (it.name.endsWith("Main") || it.name.endsWith("Test")) &&
                 !it.name.contains("Metadata")
         }
 
     tasks.named("detekt").configure {
-        dependsOn(detektMainTasks)
-        onlyIf { detektMainTasks.isNotEmpty() }
+        dependsOn(detektSourceSetTasks)
+        onlyIf { detektSourceSetTasks.isNotEmpty() }
     }
 
     afterEvaluate {
-        detektMainTasks.configureEach {
+        detektSourceSetTasks.configureEach {
             val compilation = detektTaskCompilation(name)
             if (compilation != null) {
                 dependsOn(compilation.compileKotlinTaskName)
@@ -103,7 +103,7 @@ private fun Project.configureDetektDefaultTask() {
     pluginManager.withPlugin("org.jetbrains.kotlin.multiplatform") {
         val kotlin = extensions.getByType<KotlinMultiplatformExtension>()
         afterEvaluate {
-            detektMainTasks.configureEach {
+            detektSourceSetTasks.configureEach {
                 val sourceSetName = detektTaskSourceSetName(name) ?: return@configureEach
                 val sourceSet = kotlin.sourceSets.findByName(sourceSetName) ?: return@configureEach
                 val sourceDirs = sourceSet.allDependsOnSourceSets()

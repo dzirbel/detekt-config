@@ -27,7 +27,7 @@ class TasksTest {
 
         project.apply(plugin = "io.github.dzirbel.detekt-config")
         assertEquals(setOf(":detekt", ":test"), project.tasks.check.dependencyPaths())
-        assertEquals(setOf(":detektMain"), project.tasks.detekt.dependencyPaths())
+        assertEquals(setOf(":detektMain", ":detektTest"), project.tasks.detekt.dependencyPaths())
     }
 
     @Test
@@ -35,7 +35,7 @@ class TasksTest {
         project.apply(plugin = "io.github.dzirbel.detekt-config")
         project.apply(plugin = "org.jetbrains.kotlin.jvm")
         assertEquals(setOf(":detekt", ":test"), project.tasks.check.dependencyPaths())
-        assertEquals(setOf(":detektMain"), project.tasks.detekt.dependencyPaths())
+        assertEquals(setOf(":detektMain", ":detektTest"), project.tasks.detekt.dependencyPaths())
     }
 
     // TODO KMP/JS tests

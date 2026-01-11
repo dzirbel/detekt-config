@@ -28,6 +28,11 @@ kotlin {
     }
 
     sourceSets {
+        val commonTest by getting {
+            dependencies {
+                implementation(kotlin("test"))
+            }
+        }
         if (isMac) {
             if (findByName("iosMain") == null) {
                 // Ensure iOS source sets exist even if the default hierarchy template is disabled.
@@ -43,6 +48,20 @@ kotlin {
                 }
                 val iosSimulatorArm64Main by getting {
                     dependsOn(iosMain)
+                }
+            }
+            if (findByName("iosTest") == null) {
+                val iosTest by creating {
+                    dependsOn(commonTest)
+                }
+                val iosX64Test by getting {
+                    dependsOn(iosTest)
+                }
+                val iosArm64Test by getting {
+                    dependsOn(iosTest)
+                }
+                val iosSimulatorArm64Test by getting {
+                    dependsOn(iosTest)
                 }
             }
         } else if (isWindows) {

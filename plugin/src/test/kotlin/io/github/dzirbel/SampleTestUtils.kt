@@ -22,6 +22,10 @@ internal fun assertTaskPassed(result: BuildResult, path: String): List<String> {
     return assertTaskRun(result, path, setOf(TaskOutcome.SUCCESS, TaskOutcome.UP_TO_DATE, TaskOutcome.FROM_CACHE))
 }
 
+internal fun assertFailedTasks(result: BuildResult, vararg tasks: String) {
+    assertSameContents(tasks.toList(), result.tasks.filter { it.outcome == TaskOutcome.FAILED }.map { it.path })
+}
+
 internal fun <T : Comparable<T>> assertSameContents(expected: Iterable<T>, actual: Iterable<T>) {
     assertEquals(expected.sorted(), actual.sorted())
 }
@@ -30,11 +34,24 @@ internal fun expectedWarnings(vararg files: File): Iterable<String> {
     return files.flatMap { file ->
         val path = file.absolutePath
         listOf(
+            "$path:4:5: Variable 'x' could be val. [VarCouldBeVal]",
             "$path:4:5: Variable x is declared as `var` with a mutable type kotlin.collections.MutableSet. " +
                 "Consider using `val` or an immutable collection or value type [DoubleMutabilityForCollection]",
             "$path:5:5: The method `kotlin.io.println` has been forbidden: println does not allow you to configure " +
                 "the output stream. Use a logger instead. [ForbiddenMethodCall]",
-            "$path:4:5: Variable 'x' could be val. [VarCouldBeVal]",
+        )
+    }
+}
+
+internal fun expectedTestWarnings(vararg files: File): Iterable<String> {
+    return files.flatMap { file ->
+        val path = file.absolutePath
+        listOf(
+            "$path:9:9: Variable 'x' could be val. [VarCouldBeVal]",
+            "$path:9:9: Variable x is declared as `var` with a mutable type kotlin.collections.MutableSet. " +
+                "Consider using `val` or an immutable collection or value type [DoubleMutabilityForCollection]",
+            "$path:10:9: The method `kotlin.io.println` has been forbidden: println does not allow you to configure " +
+                "the output stream. Use a logger instead. [ForbiddenMethodCall]",
         )
     }
 }

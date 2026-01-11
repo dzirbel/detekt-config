@@ -11,4 +11,12 @@ kotlin {
     js(IR) {
         browser()
     }
+
+    sourceSets {
+        commonTest {
+            dependencies {
+                implementation(kotlin("test"))
+            }
+        }
+    }
 }
