@@ -22,9 +22,7 @@ class JsProjectTest {
         assertTaskPassed(result, ":js:compileKotlinJs")
         assertTaskPassed(result, ":js:compileTestKotlinJs")
         assertTaskNotRun(result, ":js:check")
-
-        // tests fail because browsers are not installed
-        assertFailedTasks(result, ":js:detektJsMain", ":js:detektJsTest", ":js:jsBrowserTest")
+        assertFailedTasks(result, ":js:detektJsMain", ":js:detektJsTest")
 
         val mainOutput = assertTaskFailed(result, ":js:detektJsMain")
         val testOutput = assertTaskFailed(result, ":js:detektJsTest")

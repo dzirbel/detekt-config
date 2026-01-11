@@ -40,7 +40,6 @@ class KmpJvmJsProjectTest {
             ":kmp-jvm-js:detektJsMain",
             ":kmp-jvm-js:detektJvmTest",
             ":kmp-jvm-js:detektJsTest",
-            ":kmp-jvm-js:jsBrowserTest",
         )
 
         val jvmOutput = assertTaskFailed(result, ":kmp-jvm-js:detektJvmMain")

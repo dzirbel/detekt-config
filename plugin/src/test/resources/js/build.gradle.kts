@@ -9,7 +9,7 @@ repositories {
 
 kotlin {
     js(IR) {
-        browser()
+        nodejs()
     }
 
     sourceSets {
