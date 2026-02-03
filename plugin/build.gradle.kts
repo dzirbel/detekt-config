@@ -15,7 +15,7 @@ val kotlinPluginForTests = configurations.create("kotlinPluginForTests") {
 
 dependencies {
     compileOnly(kotlin("gradle-plugin"))
-    implementation("io.gitlab.arturbosch.detekt:detekt-gradle-plugin:${detektVersion.get()}")
+    implementation("dev.detekt:detekt-gradle-plugin:${detektVersion.get()}")
 
     testImplementation(kotlin("test"))
     testImplementation(kotlin("gradle-plugin"))

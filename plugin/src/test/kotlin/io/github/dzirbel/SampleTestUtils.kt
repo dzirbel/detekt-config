@@ -50,8 +50,17 @@ internal fun expectedWarnings(vararg files: File): Iterable<String> {
     }
 }
 
-internal fun expectedTestWarnings(vararg files: File): Iterable<String> {
-    return files.flatMap { file ->
+internal fun expectedTestWarnings(vararg files: File, compilerErrors: Int? = null): Iterable<String> {
+    val compilerErrorWarnings = if (compilerErrors != null) {
+        listOf(
+            "There were $compilerErrors compiler errors found during analysis. This affects accuracy of reporting.",
+            "Run detekt CLI with --debug or set `detekt { debug = true }` in Gradle to see the error messages.",
+        )
+    } else {
+        emptyList()
+    }
+
+    return compilerErrorWarnings + files.flatMap { file ->
         val path = file.absolutePath
         listOf(
             "$path:9:9: Variable 'x' could be val. [VarCouldBeVal]",

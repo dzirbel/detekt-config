@@ -1,11 +1,12 @@
 package io.github.dzirbel.rules
 
-import io.gitlab.arturbosch.detekt.test.assertThat
-import io.gitlab.arturbosch.detekt.test.lint
+import dev.detekt.api.Config
+import dev.detekt.test.lint
+import dev.detekt.test.assertj.assertThat
 import kotlin.test.Test
 
-class InjectConstructorParameterOrderRuleTest {
-    private val subject = InjectConstructorParameterOrderRule()
+class InjectConstructorParameterOrderTest {
+    private val subject = InjectConstructorParameterOrder(Config.empty)
 
     @Test
     fun `reports when @Inject constructor parameters are not alphabetical`() {
@@ -22,7 +23,7 @@ class InjectConstructorParameterOrderRuleTest {
 
         assertThat(findings)
             .singleElement()
-            .hasSourceLocation(3, 14)
+            .hasStartSourceLocation(3, 14)
             .hasMessage("Constructor parameters should be in alphabetical order: apple, zebra.")
     }
 
@@ -85,7 +86,7 @@ class InjectConstructorParameterOrderRuleTest {
 
         assertThat(findings)
             .singleElement()
-            .hasSourceLocation(3, 14)
+            .hasStartSourceLocation(3, 14)
             .hasMessage("Constructor parameters should be in alphabetical order: apple, zebra.")
     }
 
@@ -102,7 +103,7 @@ class InjectConstructorParameterOrderRuleTest {
 
         assertThat(findings)
             .singleElement()
-            .hasSourceLocation(1, 14)
+            .hasStartSourceLocation(1, 14)
             .hasMessage("Constructor parameters should be in alphabetical order: apple, zebra.")
     }
 
@@ -159,7 +160,7 @@ class InjectConstructorParameterOrderRuleTest {
 
         assertThat(findings)
             .singleElement()
-            .hasSourceLocation(6, 5)
+            .hasStartSourceLocation(6, 5)
             .hasMessage("Constructor parameters should be in alphabetical order: apple, zebra.")
     }
 }

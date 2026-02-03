@@ -27,7 +27,7 @@ class JsProjectTest {
         val mainOutput = assertTaskFailed(result, ":js:detektJsMain")
         val testOutput = assertTaskFailed(result, ":js:detektJsTest")
         assertSameContents(expectedWarnings(sampleFile), mainOutput)
-        assertSameContents(expectedTestWarnings(commonTestFile, jsTestFile), testOutput)
+        assertSameContents(expectedTestWarnings(commonTestFile, jsTestFile, compilerErrors = 8), testOutput)
     }
 
     @Test
@@ -42,6 +42,6 @@ class JsProjectTest {
         val mainOutput = assertTaskFailed(result, ":js:detektJsMain")
         val testOutput = assertTaskFailed(result, ":js:detektJsTest")
         assertSameContents(expectedWarnings(sampleFile), mainOutput)
-        assertSameContents(expectedTestWarnings(commonTestFile, jsTestFile), testOutput)
+        assertSameContents(expectedTestWarnings(commonTestFile, jsTestFile, compilerErrors = 8), testOutput)
     }
 }

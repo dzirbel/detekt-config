@@ -49,7 +49,10 @@ class KmpJvmJsProjectTest {
         assertSameContents(expectedWarnings(commonFile, sharedFile, jvmFile), jvmOutput)
         assertSameContents(expectedWarnings(commonFile, sharedFile, jsFile), jsOutput)
         assertSameContents(expectedTestWarnings(commonTestFile, sharedTestFile, jvmTestFile), jvmTestOutput)
-        assertSameContents(expectedTestWarnings(commonTestFile, sharedTestFile, jsTestFile), jsTestOutput)
+        assertSameContents(
+            expectedTestWarnings(commonTestFile, sharedTestFile, jsTestFile, compilerErrors = 12),
+            jsTestOutput,
+        )
     }
 
     @Test
@@ -76,6 +79,9 @@ class KmpJvmJsProjectTest {
         assertSameContents(expectedWarnings(commonFile, sharedFile, jvmFile), jvmOutput)
         assertSameContents(expectedWarnings(commonFile, sharedFile, jsFile), jsOutput)
         assertSameContents(expectedTestWarnings(commonTestFile, sharedTestFile, jvmTestFile), jvmTestOutput)
-        assertSameContents(expectedTestWarnings(commonTestFile, sharedTestFile, jsTestFile), jsTestOutput)
+        assertSameContents(
+            expectedTestWarnings(commonTestFile, sharedTestFile, jsTestFile, compilerErrors = 12),
+            jsTestOutput,
+        )
     }
 }

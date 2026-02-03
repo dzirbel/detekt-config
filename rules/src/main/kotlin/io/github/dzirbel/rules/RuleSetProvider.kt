@@ -1,16 +1,16 @@
 package io.github.dzirbel.rules
 
-import io.gitlab.arturbosch.detekt.api.Config
-import io.gitlab.arturbosch.detekt.api.RuleSet
-import io.gitlab.arturbosch.detekt.api.RuleSetId
-import io.gitlab.arturbosch.detekt.api.RuleSetProvider
+import dev.detekt.api.RuleSet
+import dev.detekt.api.RuleSetId
+import dev.detekt.api.RuleSetProvider
 
 class RuleSetProvider : RuleSetProvider {
-    override val ruleSetId: RuleSetId = "dzirbel"
+    override val ruleSetId: RuleSetId = RuleSetId("dzirbel")
 
-    override fun instance(config: Config): RuleSet {
-        val rules = listOf(InjectConstructorParameterOrderRule(config))
-
-        return RuleSet(id = ruleSetId, rules = rules)
-    }
+    override fun instance() = RuleSet(
+        id = ruleSetId,
+        rules = listOf(
+            ::InjectConstructorParameterOrder,
+        ),
+    )
 }

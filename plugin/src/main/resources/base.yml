@@ -1,12 +1,8 @@
-build:
-  maxIssues: 0
-  excludeCorrectable: false
-
 config:
   validation: true
   checkExhaustiveness: true
   warningsAsErrors: true
-  excludes: ''
+  excludes: []
 
 console-reports:
   active: true
@@ -14,12 +10,9 @@ console-reports:
     - 'ProjectStatisticsReport'
     - 'ComplexityReport'
     - 'NotificationReport'
-    - 'FindingsReport'
-    - 'FileBasedFindingsReport'
-    # - 'LiteFindingsReport'
-
-output-reports:
-  active: false
+    - 'IssuesReport'
+    - 'FileBasedIssuesReport'
+    # - 'LiteIssuesReport'
 
 processors:
   active: false # no need for processors when not generating output reports
@@ -28,11 +21,11 @@ comments:
   active: true
   AbsentOrWrongFileLicense:
     active: false
-    licenseTemplateFile: 'license.template'
     licenseTemplateIsRegex: false
-  CommentOverPrivateFunction:
+    licenseTemplate: ''
+  DocumentationOverPrivateFunction:
     active: false
-  CommentOverPrivateProperty:
+  DocumentationOverPrivateProperty:
     active: false
   DeprecatedBlockTag:
     active: true
@@ -64,19 +57,19 @@ complexity:
   active: true
   CognitiveComplexMethod:
     active: false
-    threshold: 15
+    allowedComplexity: 15
   ComplexCondition:
     active: true
-    threshold: 4
+    allowedConditions: 4
   ComplexInterface:
     active: false
-    threshold: 10
+    allowedDefinitions: 10
     includeStaticDeclarations: false
     includePrivateDeclarations: false
     ignoreOverloaded: false
   CyclomaticComplexMethod:
     active: false
-    threshold: 15
+    allowedComplexity: 15
     ignoreSingleWhenExpression: false
     ignoreSimpleWhenEntries: false
     ignoreNestingFunctions: false
@@ -95,47 +88,47 @@ complexity:
     ignoredLabels: []
   LargeClass:
     active: true
-    threshold: 600
+    allowedLines: 600
   LongMethod:
     active: false
-    threshold: 60
+    allowedLines: 60
   LongParameterList:
     active: false
-    functionThreshold: 6
-    constructorThreshold: 7
+    allowedFunctionParameters: 6
+    allowedConstructorParameters: 7
     ignoreDefaultParameters: false
     ignoreDataClasses: true
     ignoreAnnotatedParameter: []
   MethodOverloading:
     active: false
-    threshold: 6
+    allowedOverloads: 6
   NamedArguments:
     active: true
-    threshold: 3
+    allowedArguments: 3
     ignoreArgumentsMatchingNames: false
   NestedBlockDepth:
     active: true
-    threshold: 6
+    allowedDepth: 6
   NestedScopeFunctions:
     active: true
-    threshold: 1
+    allowedDepth: 1
     functions: ['kotlin.apply', 'kotlin.run', 'kotlin.with']
   ReplaceSafeCallChainWithRun:
     active: false
   StringLiteralDuplication:
     active: false
-    threshold: 3
+    allowedDuplications: 3
     ignoreAnnotation: true
-    excludeStringsWithLessThan5Characters: true
+    allowedWithLengthLessThan: 5
     ignoreStringsRegex: '$^'
   TooManyFunctions:
     active: true
     excludes: <TEST_PATHS>
-    thresholdInFiles: 25
-    thresholdInClasses: 25
-    thresholdInInterfaces: 25
-    thresholdInObjects: 100
-    thresholdInEnums: 10
+    allowedFunctionsPerFile: 25
+    allowedFunctionsPerClass: 25
+    allowedFunctionsPerInterface: 25
+    allowedFunctionsPerObject: 100
+    allowedFunctionsPerEnum: 10
     ignoreDeprecated: false
     ignorePrivate: true
     ignoreOverridden: true
@@ -143,6 +136,8 @@ complexity:
 
 coroutines:
   active: true
+  CoroutineLaunchedInTestWithoutRunTest:
+    active: true
   GlobalCoroutineUsage:
     active: false
   InjectDispatcher:
@@ -151,6 +146,8 @@ coroutines:
   RedundantSuspendModifier:
     active: true
   SleepInsteadOfDelay:
+    active: true
+  SuspendFunInFinallySection:
     active: true
   SuspendFunSwallowedCancellation:
     active: true
@@ -183,7 +180,7 @@ empty-blocks:
     active: true
   EmptyInitBlock:
     active: true
-  EmptyKtFile:
+  EmptyKotlinFile:
     active: true
   EmptySecondaryConstructor:
     active: true
@@ -196,6 +193,8 @@ empty-blocks:
 
 exceptions:
   active: true
+  ErrorUsageWithThrowable:
+    active: true
   ExceptionRaisedInUnexpectedLocation:
     active: true
     methodNames: ['equals', 'finalize', 'hashCode', 'toString']
@@ -262,9 +261,9 @@ exceptions:
       - 'RuntimeException'
       - 'Throwable'
 
-formatting:
+ktlint:
   active: true
-  android: false
+  code_style: 'intellij_idea'
   autoCorrect: true
   AnnotationOnSeparateLine:
     active: true
@@ -277,16 +276,38 @@ formatting:
     active: true
     autoCorrect: true
     indentSize: 4
-    maxLineLength: 120
+    ignoreRuleParameterThreshold: 8
+  BackingPropertyNaming:
+    active: true
+  BinaryExpressionWrapping:
+    active: true
+    autoCorrect: true
+    indentSize: 4
+  BlankLineBeforeDeclaration:
+    active: true
+    autoCorrect: true
+  BlankLineBetweenWhenConditions:
+    active: true
+    autoCorrect: true
+    lineBreakAfterWhenEntries: true
   BlockCommentInitialStarAlignment:
     active: true
+    autoCorrect: true
+  ChainMethodContinuation:
+    active: true
+    autoCorrect: true
+    indentSize: 4
+    forceMultilineWhenChainOperatorCountGreaterOrEqualThan: 4
   ChainWrapping:
     active: true
     autoCorrect: true
     indentSize: 4
   ClassName:
     active: true
+  ClassSignature:
+    active: true
     autoCorrect: true
+    indentSize: 4
   CommentSpacing:
     active: true
     autoCorrect: true
@@ -294,24 +315,33 @@ formatting:
     active: true
     autoCorrect: true
     indentSize: 4
+  ConditionWrapping:
+    active: true
+    autoCorrect: true
+    indentSize: 4
+  ContextReceiverListWrapping:
+    active: true
+    autoCorrect: true
+    indentSize: 4
   ContextReceiverMapping:
     active: true
     autoCorrect: true
-    maxLineLength: 120
     indentSize: 4
-  DiscouragedCommentLocation:
-    active: true
-    autoCorrect: true
   EnumEntryNameCase:
     active: true
+    aliases: ['EnumEntryName']
     autoCorrect: true
+    enumEntryNameCasing: 'upper_or_camel_cases'
   EnumWrapping:
-    active: false # does not allow single-line definitions for simple enums
+    active: true
+    autoCorrect: true
+    indentSize: 4
+  ExpressionOperandWrapping:
+    active: true
     autoCorrect: true
     indentSize: 4
   Filename:
     active: true
-    autoCorrect: true
   FinalNewline:
     active: true
     autoCorrect: true
@@ -319,21 +349,29 @@ formatting:
   FunKeywordSpacing:
     active: true
     autoCorrect: true
-  FunctionName:
-    active: false # does not allow for interface constructor functions
+  FunctionExpressionBody:
+    active: true
     autoCorrect: true
+    indentSize: 4
+  FunctionLiteral:
+    active: true
+    autoCorrect: true
+    indentSize: 4
+  FunctionName:
+    active: true
   FunctionReturnTypeSpacing:
     active: true
     autoCorrect: true
-    maxLineLength: 120
   FunctionSignature:
     active: true
     autoCorrect: true
     forceMultilineWhenParameterCountGreaterOrEqualThan: 2147483647
     functionBodyExpressionWrapping: 'default'
-    maxLineLength: 120
     indentSize: 4
   FunctionStartOfBodySpacing:
+    active: true
+    autoCorrect: true
+  FunctionTypeModifierSpacing:
     active: true
     autoCorrect: true
   FunctionTypeReferenceSpacing:
@@ -350,38 +388,48 @@ formatting:
   ImportOrdering:
     active: true
     autoCorrect: true
-    layout: '*,java.**,javax.**,kotlin.**,^'
   Indentation:
     active: true
     autoCorrect: true
     indentSize: 4
+    indentWhenArrowOnNewLine: false
+  Kdoc:
+    active: true
   KdocWrapping:
     active: true
     autoCorrect: true
     indentSize: 4
   MaximumLineLength:
     active: true
-    autoCorrect: true
-    maxLineLength: 120
+    aliases: ['MaxLineLength']
     ignoreBackTickedIdentifier: false
+  MixedConditionOperators:
+    active: true
   ModifierListSpacing:
     active: true
     autoCorrect: true
+    indentSize: 4
   ModifierOrdering:
     active: true
     autoCorrect: true
   MultiLineIfElse:
     active: true
     autoCorrect: true
+    indentSize: 4
   MultilineExpressionWrapping:
-    active: false # requires assignment to a multiline value to be on a separate line
+    active: true
+    autoCorrect: true
+    indentSize: 4
+    functionBodyExpressionWrapping: 'multiline'
+  MultilineLoop:
+    active: true
     autoCorrect: true
     indentSize: 4
   NoBlankLineBeforeRbrace:
     active: true
     autoCorrect: true
   NoBlankLineInList:
-    active: false # does not add spacing between list items with comments (kdoc, etc)
+    active: true
     autoCorrect: true
   NoBlankLinesInChainedMethodCalls:
     active: true
@@ -391,13 +439,15 @@ formatting:
     autoCorrect: true
   NoConsecutiveComments:
     active: true
-    autoCorrect: true
   NoEmptyClassBody:
     active: true
     autoCorrect: true
+  NoEmptyFile:
+    active: true
   NoEmptyFirstLineInClassBody:
-    active: false # does not allow for a space before a kdoc comment on members or after a complicated class signature
+    active: true
     autoCorrect: true
+    indentSize: 4
   NoEmptyFirstLineInMethodBlock:
     active: true
     autoCorrect: true
@@ -428,34 +478,29 @@ formatting:
     autoCorrect: true
   NoWildcardImports:
     active: true
-    autoCorrect: true
     packagesToUseImportOnDemandProperty: ''
   NullableTypeSpacing:
     active: true
     autoCorrect: true
   PackageName:
     active: true
-    autoCorrect: true
   ParameterListSpacing:
     active: true
     autoCorrect: true
   ParameterListWrapping:
     active: true
     autoCorrect: true
-    maxLineLength: 120
     indentSize: 4
   ParameterWrapping:
     active: true
     autoCorrect: true
-    maxLineLength: 120
     indentSize: 4
   PropertyName:
-    active: false # requires "screaming snake case" for `val` fields which are mutable (MutableList, etc)
-    autoCorrect: true
+    active: true
+    constantNamingStyle: 'screaming_snake_case'
   PropertyWrapping:
     active: true
     autoCorrect: true
-    maxLineLength: 120
     indentSize: 4
   SpacingAroundAngleBrackets:
     active: true
@@ -469,6 +514,7 @@ formatting:
   SpacingAroundCurly:
     active: true
     autoCorrect: true
+    indentSize: 4
   SpacingAroundDot:
     active: true
     autoCorrect: true
@@ -487,6 +533,9 @@ formatting:
   SpacingAroundRangeOperator:
     active: true
     autoCorrect: true
+  SpacingAroundSquareBrackets:
+    active: true
+    autoCorrect: true
   SpacingAroundUnaryOperator:
     active: true
     autoCorrect: true
@@ -499,27 +548,38 @@ formatting:
   SpacingBetweenFunctionNameAndOpeningParenthesis:
     active: true
     autoCorrect: true
+  StatementWrapping:
+    active: true
+    autoCorrect: true
+    indentSize: 4
   StringTemplate:
     active: true
     autoCorrect: true
   StringTemplateIndent:
-    active: false # requirements are unclear and clash with Indentation/MultilineRawStringIndentation
+    active: true
     autoCorrect: true
     indentSize: 4
+  ThenSpacing:
+    active: true
+    autoCorrect: true
   TrailingCommaOnCallSite:
     active: true
     autoCorrect: true
-    useTrailingCommaOnCallSite: true
   TrailingCommaOnDeclarationSite:
     active: true
     autoCorrect: true
-    useTrailingCommaOnDeclarationSite: true
   TryCatchFinallySpacing:
     active: true
     autoCorrect: true
+    indentSize: 4
+  TypeArgumentComment:
+    active: true
   TypeArgumentListSpacing:
     active: true
     autoCorrect: true
+    indentSize: 4
+  TypeParameterComment:
+    active: true
   TypeParameterListSpacing:
     active: true
     autoCorrect: true
@@ -527,11 +587,18 @@ formatting:
   UnnecessaryParenthesesBeforeTrailingLambda:
     active: true
     autoCorrect: true
+  ValueArgumentComment:
+    active: true
+  ValueParameterComment:
+    active: true
+  WhenEntryBracing:
+    active: true
+    autoCorrect: true
+    indentSize: 4
   Wrapping:
     active: true
     autoCorrect: true
     indentSize: 4
-    maxLineLength: 120
 
 naming:
   active: true
@@ -552,10 +619,10 @@ naming:
   ForbiddenClassName:
     active: false
     forbiddenName: []
-  FunctionMaxLength:
+  FunctionNameMaxLength:
     active: false
     maximumFunctionNameLength: 30
-  FunctionMinLength:
+  FunctionNameMinLength:
     active: false
     minimumFunctionNameLength: 3
   FunctionNaming:
@@ -615,16 +682,20 @@ performance:
     active: true
   CouldBeSequence:
     active: true
-    threshold: 3
+    allowedOperations: 3
     excludes: <TEST_PATHS>
   ForEachOnRange:
     active: true
   SpreadOperator:
     active: true
     excludes: <TEST_PATHS>
+  UnnecessaryInitOnArray:
+    active: true
   UnnecessaryPartOfBinaryExpression:
     active: true
   UnnecessaryTemporaryInstantiation:
+    active: true
+  UnnecessaryTypeCasting:
     active: true
 
 potential-bugs:
@@ -636,6 +707,8 @@ potential-bugs:
     active: true
     excludes: <TEST_PATHS>
   CastToNullableType:
+    active: true
+  CharArrayToStringCall:
     active: true
   Deprecation:
     active: true
@@ -697,6 +770,10 @@ potential-bugs:
     ignoreOnClassesPattern: ''
   MapGetWithNotNullAssertionOperator:
     active: true
+  MissingSuperCall:
+    active: true
+  MissingUseCall:
+    active: true
   MissingPackageDeclaration:
     active: true
   NullCheckOnMutableProperty:
@@ -707,6 +784,8 @@ potential-bugs:
     active: true
   UnconditionalJumpStatementInLoop:
     active: true
+  UnnamedParameterUse:
+    active: false
   UnnecessaryNotNullCheck:
     active: true
   UnnecessaryNotNullOperator:
@@ -730,6 +809,10 @@ potential-bugs:
 
 style:
   active: true
+  AbstractClassCanBeConcreteClass:
+    active: true
+  AbstractClassCanBeInterface:
+    active: true
   AlsoCouldBeApply:
     active: false
   BracesOnIfStatements:
@@ -758,6 +841,8 @@ style:
   DestructuringDeclarationWithTooManyEntries:
     active: true
     maxDestructuringEntries: 3
+  DoubleNegativeExpression:
+    active: true
   DoubleNegativeLambda:
     active: true
     negativeFunctions:
@@ -773,6 +858,8 @@ style:
   EqualsOnSignatureLine:
     active: true
   ExplicitCollectionElementAccessMethod:
+    active: true
+  ExplicitItLambdaMultipleParameters:
     active: true
   ExplicitItLambdaParameter:
     active: true
@@ -808,12 +895,18 @@ style:
     allowedPatterns: ''
   ForbiddenImport:
     active: false
-    imports: []
-    forbiddenPatterns: ''
+    forbiddenImports: []
+    allowedImports: []
   ForbiddenMethodCall:
     active: true
     methods:
       <FORBIDDEN_METHOD_CALLS>
+  ForbiddenNamedParam:
+    active: false
+    methods: []
+  ForbiddenOptIn:
+    active: false
+    markerClasses: []
   ForbiddenSuppress:
     active: false
     rules: []
@@ -855,7 +948,7 @@ style:
     excludeImportStatements: true
     excludeCommentStatements: false
     excludeRawStrings: false
-  MayBeConst:
+  MayBeConstant:
     active: true
   ModifierOrder:
     active: true
@@ -879,15 +972,15 @@ style:
     active: true
   OptionalUnit:
     active: false # exact opposite of ImplicitUnitReturnType; explicit Unit helps avoid types changing unexpectedly
-  PreferToOverPairSyntax:
-    active: false
   ProtectedMemberInFinalClass:
+    active: true
+  RedundantConstructorKeyword:
     active: true
   RedundantExplicitType:
     active: true
   RedundantHigherOrderMapUsage:
     active: true
-  RedundantVisibilityModifierRule:
+  RedundantVisibilityModifier:
     active: true
   ReturnCount:
     active: true
@@ -900,7 +993,7 @@ style:
     active: true
   SerialVersionUIDInSerializableClass:
     active: false
-  SpacingBetweenPackageAndImports:
+  SpacingAfterPackageDeclaration:
     active: true
   StringShouldBeRawString:
     active: true
@@ -919,9 +1012,7 @@ style:
     active: true
     acceptableLength: 5
     allowNonStandardGrouping: false
-  UnnecessaryAbstractClass:
-    active: false
-  UnnecessaryAnnotationUseSiteTarget:
+  UnnecessaryAny:
     active: true
   UnnecessaryApply:
     active: true
@@ -930,6 +1021,8 @@ style:
   UnnecessaryBracesAroundTrailingLambda:
     active: true
   UnnecessaryFilter:
+    active: true
+  UnnecessaryFullyQualifiedName:
     active: true
   UnnecessaryInheritance:
     active: true
@@ -940,19 +1033,24 @@ style:
   UnnecessaryParentheses:
     active: true
     allowForUnclearPrecedence: true
-  UntilInsteadOfRangeTo:
+  UnnecessaryReversed:
     active: true
-  UnusedImports:
+  RangeUntilInsteadOfRangeTo:
+    active: true
+  UnusedImport:
     active: true
   UnusedParameter:
     active: true
     allowedNames: ''
   UnusedPrivateClass:
     active: true
-  UnusedPrivateMember:
+  UnusedPrivateFunction:
     active: true
     allowedNames: ''
   UnusedPrivateProperty:
+    active: true
+    allowedNames: ''
+  UnusedVariable:
     active: true
     allowedNames: ''
   UseAnyOrNoneInsteadOfFind:
@@ -995,3 +1093,8 @@ style:
   WildcardImport:
     active: true
     excludeImports: []
+
+dzirbel:
+  active: true
+  InjectConstructorParameterOrder:
+    active: true

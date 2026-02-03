@@ -1,23 +1,17 @@
 package io.github.dzirbel.rules
 
-import io.gitlab.arturbosch.detekt.api.CodeSmell
-import io.gitlab.arturbosch.detekt.api.Config
-import io.gitlab.arturbosch.detekt.api.Debt
-import io.gitlab.arturbosch.detekt.api.Entity
-import io.gitlab.arturbosch.detekt.api.Issue
-import io.gitlab.arturbosch.detekt.api.Rule
-import io.gitlab.arturbosch.detekt.api.Severity
+import dev.detekt.api.Config
+import dev.detekt.api.Entity
+import dev.detekt.api.Finding
+import dev.detekt.api.Rule
 import org.jetbrains.kotlin.psi.KtConstructor
 import org.jetbrains.kotlin.psi.KtPrimaryConstructor
 import org.jetbrains.kotlin.psi.KtSecondaryConstructor
 
-class InjectConstructorParameterOrderRule(config: Config = Config.empty) : Rule(config) {
-    override val issue = Issue(
-        id = "InjectConstructorParameterOrder",
-        severity = Severity.Style,
-        description = "Reports @Inject constructors whose parameters are not in alphabetical order.",
-        debt = Debt.FIVE_MINS,
-    )
+class InjectConstructorParameterOrder(config: Config) : Rule(
+    config = config,
+    description = "Reports @Inject constructors whose parameters are not in alphabetical order.",
+) {
 
     override fun visitPrimaryConstructor(constructor: KtPrimaryConstructor) {
         super.visitPrimaryConstructor(constructor)
@@ -41,8 +35,7 @@ class InjectConstructorParameterOrderRule(config: Config = Config.empty) : Rule(
         val sortedNames = parameterNames.sorted()
         if (parameterNames != sortedNames) {
             report(
-                CodeSmell(
-                    issue = issue,
+                Finding(
                     entity = Entity.from(constructor),
                     message = "Constructor parameters should be in alphabetical order: " +
                         "${sortedNames.joinToString()}.",

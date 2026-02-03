@@ -35,7 +35,7 @@ class KmpNativeProjectTest {
             val mainOutput = assertTaskFailed(result, target.detektTaskName)
             val testOutput = assertTaskFailed(result, target.detektTestTaskName)
             assertSameContents(expectedWarnings(*target.mainFiles.toTypedArray()), mainOutput)
-            assertSameContents(expectedTestWarnings(*target.testFiles.toTypedArray()), testOutput)
+            assertSameContents(expectedTestWarnings(*target.testFiles.toTypedArray(), compilerErrors = 8), testOutput)
         }
     }
 
@@ -54,7 +54,7 @@ class KmpNativeProjectTest {
             val mainOutput = assertTaskFailed(result, target.detektTaskName)
             val testOutput = assertTaskFailed(result, target.detektTestTaskName)
             assertSameContents(expectedWarnings(*target.mainFiles.toTypedArray()), mainOutput)
-            assertSameContents(expectedTestWarnings(*target.testFiles.toTypedArray()), testOutput)
+            assertSameContents(expectedTestWarnings(*target.testFiles.toTypedArray(), compilerErrors = 8), testOutput)
         }
     }
 

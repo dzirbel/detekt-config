@@ -9,10 +9,11 @@ private val versions = rootProject.extra["versions"] as Provider<Properties>
 private val detektVersion = versions.map { it["detekt"] }
 
 dependencies {
-    compileOnly("io.gitlab.arturbosch.detekt:detekt-api:${detektVersion.get()}")
+    compileOnly("dev.detekt:detekt-api:${detektVersion.get()}")
 
     testImplementation(kotlin("test"))
-    testImplementation("io.gitlab.arturbosch.detekt:detekt-test:${detektVersion.get()}")
+    testImplementation("dev.detekt:detekt-test:${detektVersion.get()}")
+    testImplementation("dev.detekt:detekt-test-assertj:${detektVersion.get()}")
     testImplementation(libs.assertj)
 }
 
