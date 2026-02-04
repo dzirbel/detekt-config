@@ -17,8 +17,11 @@ dependencyResolutionManagement {
 }
 
 include("js")
+include("js-standalone")
 include("jvm")
 include("jvm-clean")
+include("jvm-custom")
+include("jvm-deps")
 include("kmp-native")
 include("kmp-jvm-js")
 include("kmp-jvm-js-clean")

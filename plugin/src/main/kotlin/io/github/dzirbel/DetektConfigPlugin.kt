@@ -9,6 +9,7 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.getByType
+import org.jetbrains.kotlin.gradle.dsl.KotlinJsProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
@@ -47,8 +48,6 @@ private fun Project.configureDetektDefaultTask() {
     val detektRoot = tasks.named("detekt")
 
     fun registerDetektTask(taskName: String, compilation: KotlinCompilation<*>, isMultiplatform: Boolean) {
-        if (compilation.name !in setOf("main", "test")) return
-
         val detektTask = detektTaskProvider(taskName)
         detektTasks += detektTask
         detektRoot.configure { dependsOn(detektTask) }
@@ -88,6 +87,15 @@ private fun Project.configureDetektDefaultTask() {
         val kotlin = extensions.getByType<KotlinJvmProjectExtension>()
         kotlin.target.compilations.configureEach {
             registerDetektTask(detektTaskName(name), this, isMultiplatform = false)
+        }
+    }
+
+    pluginManager.withPlugin("org.jetbrains.kotlin.js") {
+        val kotlin = extensions.getByType<KotlinJsProjectExtension>()
+        kotlin.registerTargetObserver { target ->
+            target?.compilations?.configureEach {
+                registerDetektTask(detektTaskName(name), this, isMultiplatform = false)
+            }
         }
     }
 
