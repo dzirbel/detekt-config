@@ -1,6 +1,9 @@
 [versions]
 assertj = "3.25.3"
+compose = "1.10.0"
 kotlin = "2.3.0"
 
 [libraries]
 assertj = { module = "org.assertj:assertj-core", version.ref = "assertj" }
+compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose" }
+compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose" }

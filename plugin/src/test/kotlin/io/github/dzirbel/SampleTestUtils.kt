@@ -29,6 +29,10 @@ internal fun assertTaskPassed(result: BuildResult, path: String): List<String> {
     return assertTaskRun(result, path, setOf(TaskOutcome.SUCCESS, TaskOutcome.UP_TO_DATE, TaskOutcome.FROM_CACHE))
 }
 
+internal fun assertTaskNoSource(result: BuildResult, path: String): List<String> {
+    return assertTaskRun(result, path, setOf(TaskOutcome.NO_SOURCE))
+}
+
 internal fun assertFailedTasks(result: BuildResult, vararg tasks: String) {
     assertSameContents(tasks.toList(), result.tasks.filter { it.outcome == TaskOutcome.FAILED }.map { it.path })
 }

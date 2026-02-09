@@ -13,8 +13,6 @@ kotlin {
         nodejs()
     }
 
-    applyDefaultHierarchyTemplate()
-
     sourceSets {
         val commonMain by getting
         val commonTest by getting {
@@ -28,16 +26,16 @@ kotlin {
         val sharedTest by creating {
             dependsOn(commonTest)
         }
-        val jvmMain by getting {
+        jvmMain {
             dependsOn(sharedMain)
         }
-        val jvmTest by getting {
+        jvmTest {
             dependsOn(sharedTest)
         }
-        val jsMain by getting {
+        jsMain {
             dependsOn(sharedMain)
         }
-        val jsTest by getting {
+        jsTest {
             dependsOn(sharedTest)
         }
     }

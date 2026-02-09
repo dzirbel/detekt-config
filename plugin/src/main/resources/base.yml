@@ -358,7 +358,7 @@ ktlint:
     autoCorrect: true
     indentSize: 4
   FunctionName:
-    active: true
+    active: false # covered by naming.FunctionNaming; avoids detekt 2 alpha Compose suppression crash
   FunctionReturnTypeSpacing:
     active: true
     autoCorrect: true
