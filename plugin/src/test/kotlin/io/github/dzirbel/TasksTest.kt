@@ -17,10 +17,11 @@ import kotlin.test.assertContains
  */
 class TasksTest {
 
-    private val project = ProjectBuilder.builder().build()
+    private fun project() = ProjectBuilder.builder().build()
 
     @Test
     fun `no other plugins`() {
+        val project = project()
         project.apply(plugin = "io.github.dzirbel.detekt-config")
 
         assertSameContents(
@@ -31,6 +32,7 @@ class TasksTest {
 
     @Test
     fun `after kotlin jvm plugin`() {
+        val project = project()
         project.apply(plugin = "org.jetbrains.kotlin.jvm")
         assertSameContents(listOf(":test"), project.tasks.check.dependencyPaths())
 
@@ -42,6 +44,7 @@ class TasksTest {
 
     @Test
     fun `before kotlin jvm plugin`() {
+        val project = project()
         project.apply(plugin = "io.github.dzirbel.detekt-config")
         project.apply(plugin = "org.jetbrains.kotlin.jvm")
 
@@ -51,6 +54,7 @@ class TasksTest {
 
     @Test
     fun `after kotlin multiplatform jvm plugin`() {
+        val project = project()
         project.apply(plugin = "org.jetbrains.kotlin.multiplatform")
         project.extensions.configure<KotlinMultiplatformExtension> {
             jvm()
@@ -63,6 +67,7 @@ class TasksTest {
 
     @Test
     fun `after kotlin multiplatform js plugin`() {
+        val project = project()
         project.apply(plugin = "org.jetbrains.kotlin.multiplatform")
         project.extensions.configure<KotlinMultiplatformExtension> {
             js()
@@ -75,6 +80,7 @@ class TasksTest {
 
     @Test
     fun `after kotlin multiplatform native plugin, windows`() {
+        val project = project()
         project.apply(plugin = "org.jetbrains.kotlin.multiplatform")
         project.extensions.configure<KotlinMultiplatformExtension> {
             mingwX64()
@@ -87,6 +93,7 @@ class TasksTest {
 
     @Test
     fun `after kotlin multiplatform native plugin, ios`() {
+        val project = project()
         project.apply(plugin = "org.jetbrains.kotlin.multiplatform")
         project.extensions.configure<KotlinMultiplatformExtension> {
             iosX64()
@@ -111,6 +118,7 @@ class TasksTest {
 
     @Test
     fun `after kotlin multiplatform native plugin, linux arm64`() {
+        val project = project()
         project.apply(plugin = "org.jetbrains.kotlin.multiplatform")
         project.extensions.configure<KotlinMultiplatformExtension> {
             linuxArm64()
@@ -126,6 +134,7 @@ class TasksTest {
 
     @Test
     fun `after kotlin multiplatform native plugin, linux x64`() {
+        val project = project()
         project.apply(plugin = "org.jetbrains.kotlin.multiplatform")
         project.extensions.configure<KotlinMultiplatformExtension> {
             linuxX64()
@@ -141,6 +150,7 @@ class TasksTest {
 
     @Test
     fun `after kotlin multiplatform jvm js plugin`() {
+        val project = project()
         project.apply(plugin = "org.jetbrains.kotlin.multiplatform")
         project.extensions.configure<KotlinMultiplatformExtension> {
             jvm()

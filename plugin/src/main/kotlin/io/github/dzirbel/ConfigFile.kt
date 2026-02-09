@@ -4,6 +4,10 @@ import org.gradle.api.Project
 import org.gradle.api.provider.Provider
 import org.gradle.kotlin.dsl.getByType
 
+private const val testPathsPlaceholder = "<TEST_PATHS>"
+private const val forbiddenMethodCallsPlaceholder = "<FORBIDDEN_METHOD_CALLS>"
+private const val indentedForbiddenMethodCallsPlaceholder = "      $forbiddenMethodCallsPlaceholder"
+
 internal fun Project.buildDetektConfig(): Provider<String> {
     return providers.provider {
         val extension = extensions.getByType<DetektConfigExtension>()
@@ -17,19 +21,28 @@ internal fun Project.buildDetektConfig(): Provider<String> {
         }
             .run {
                 val testPaths = extension.testPaths.get()
-                    .joinToString(separator = ", ", prefix = "[", postfix = "]") { "'$it'" }
-                replace("<TEST_PATHS>".toRegex(), testPaths)
+                    .joinToString(separator = ", ", prefix = "[", postfix = "]") { it.toYamlSingleQuotedString() }
+                replace(testPathsPlaceholder, testPaths)
             }
             .run {
                 val forbiddenMethodCalls = extension.forbiddenMethodCalls.get()
-                    .map { forbiddenMethodCall ->
-                        """
-                            - reason: '${forbiddenMethodCall.reason}'
-                              value: '${forbiddenMethodCall.value}'
-                        """.replaceIndent(newIndent = " ".repeat(6))
+                    .takeIf { it.isNotEmpty() }
+                    ?.joinToString(separator = "\n") { forbiddenMethodCall ->
+                        val reasonLine = forbiddenMethodCall.reason?.let {
+                            "      - reason: ${it.toYamlSingleQuotedString()}\n"
+                        } ?: "      -\n"
+                        buildString {
+                            append(reasonLine)
+                            append("        value: ${forbiddenMethodCall.value.toYamlSingleQuotedString()}")
+                        }
                     }
-                    .joinToString(separator = "\n")
-                replace(" *<FORBIDDEN_METHOD_CALLS>".toRegex(), forbiddenMethodCalls)
+                    ?: "      []"
+                // Keep indentation in the template and only replace the explicit placeholder token.
+                replace(indentedForbiddenMethodCallsPlaceholder, forbiddenMethodCalls)
             }
     }
+}
+
+private fun String.toYamlSingleQuotedString(): String {
+    return "'${replace("'", "''")}'"
 }

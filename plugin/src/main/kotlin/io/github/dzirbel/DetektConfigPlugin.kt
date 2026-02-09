@@ -47,6 +47,8 @@ private fun Project.configureDetektDefaultTask() {
     val detektTasks = mutableListOf<TaskProvider<Detekt>>()
     val detektRoot = tasks.named("detekt")
 
+    // TODO add dedicated handling and TestKit coverage for `org.jetbrains.kotlin.android` projects.
+    // Today this plugin focuses on JVM/JS/KMP compilations and may miss Android-only variants.
     fun registerDetektTask(taskName: String, compilation: KotlinCompilation<*>, isMultiplatform: Boolean) {
         val detektTask = detektTaskProvider(taskName)
         detektTasks += detektTask
@@ -63,6 +65,7 @@ private fun Project.configureDetektDefaultTask() {
                 }
             }
             dependsOn(compileTaskProvider)
+            // TODO avoid realizing compile tasks at configuration time once classpath/source wiring can be fully lazy.
             val compileTask = compileTaskProvider.get()
             val kotlinCompileTask = compileTask as? AbstractKotlinCompileTool<*>
             if (kotlinCompileTask != null) {
@@ -121,8 +124,8 @@ private fun Project.detektTaskProvider(taskName: String): TaskProvider<Detekt> {
 
 private fun detektTaskName(compilationName: String, targetName: String? = null): String {
     val targetPrefix = targetName?.takeIf { it.isNotBlank() }
-        ?.replaceFirstChar { it.uppercase() }
+        ?.replaceFirstChar { it.uppercaseChar() }
         ?: ""
-    val compilationSuffix = compilationName.replaceFirstChar { it.uppercase() }
+    val compilationSuffix = compilationName.replaceFirstChar { it.uppercaseChar() }
     return "detekt$targetPrefix$compilationSuffix"
 }
