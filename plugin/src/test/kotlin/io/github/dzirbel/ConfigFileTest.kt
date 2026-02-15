@@ -56,6 +56,7 @@ class ConfigFileTest {
 
         val config = project.buildDetektConfig().get()
 
+        assertFalse(config.contains("\r"))
         assertContains(config, "methods:\n      []")
     }
 }

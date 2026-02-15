@@ -1,5 +1,6 @@
 package io.github.dzirbel
 
+import java.nio.charset.StandardCharsets.UTF_8
 import java.util.Properties
 
 private val classLoader = DetektConfigPlugin::class.java.classLoader
@@ -11,9 +12,15 @@ internal fun readResourceProperties(name: String): Properties {
 }
 
 internal fun readResource(name: String): String {
-    return requireResourceStream(name).use { it.reader().readText() }
+    return requireResourceStream(name).use { stream ->
+        stream.bufferedReader(UTF_8).readText().normalizeLineEndings()
+    }
 }
 
 private fun requireResourceStream(name: String) = checkNotNull(classLoader.getResourceAsStream(name)) {
     "resource $name could not be found"
+}
+
+private fun String.normalizeLineEndings(): String {
+    return replace("\r\n", "\n").replace("\r", "\n")
 }
