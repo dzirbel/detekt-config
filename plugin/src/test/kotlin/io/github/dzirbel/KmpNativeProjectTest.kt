@@ -107,24 +107,27 @@ class KmpNativeProjectTest : SampleProjectTest("kmp-native") {
                     compileTestTaskName = ":kmp-native:compileTestKotlinIosArm64",
                     testTaskName = ":kmp-native:iosArm64TestBinaries",
                 ),
-                NativeTarget(
-                    mainFiles = listOf(commonFile, iosMainFile, iosSimulatorArm64MainFile),
-                    testFiles = listOf(commonTestFile, iosTestFile, iosSimulatorArm64TestFile),
-                    detektTaskName = ":kmp-native:detektIosSimulatorArm64Main",
-                    detektTestTaskName = ":kmp-native:detektIosSimulatorArm64Test",
-                    compileTaskName = ":kmp-native:compileKotlinIosSimulatorArm64",
-                    compileTestTaskName = ":kmp-native:compileTestKotlinIosSimulatorArm64",
-                    testTaskName = ":kmp-native:iosSimulatorArm64Test",
-                ),
-                NativeTarget(
-                    mainFiles = listOf(commonFile, iosMainFile, iosX64MainFile),
-                    testFiles = listOf(commonTestFile, iosTestFile, iosX64TestFile),
-                    detektTaskName = ":kmp-native:detektIosX64Main",
-                    detektTestTaskName = ":kmp-native:detektIosX64Test",
-                    compileTaskName = ":kmp-native:compileKotlinIosX64",
-                    compileTestTaskName = ":kmp-native:compileTestKotlinIosX64",
-                    testTaskName = ":kmp-native:iosX64Test",
-                ),
+                if (isArm64) {
+                    NativeTarget(
+                        mainFiles = listOf(commonFile, iosMainFile, iosSimulatorArm64MainFile),
+                        testFiles = listOf(commonTestFile, iosTestFile, iosSimulatorArm64TestFile),
+                        detektTaskName = ":kmp-native:detektIosSimulatorArm64Main",
+                        detektTestTaskName = ":kmp-native:detektIosSimulatorArm64Test",
+                        compileTaskName = ":kmp-native:compileKotlinIosSimulatorArm64",
+                        compileTestTaskName = ":kmp-native:compileTestKotlinIosSimulatorArm64",
+                        testTaskName = ":kmp-native:iosSimulatorArm64Test",
+                    )
+                } else {
+                    NativeTarget(
+                        mainFiles = listOf(commonFile, iosMainFile, iosX64MainFile),
+                        testFiles = listOf(commonTestFile, iosTestFile, iosX64TestFile),
+                        detektTaskName = ":kmp-native:detektIosX64Main",
+                        detektTestTaskName = ":kmp-native:detektIosX64Test",
+                        compileTaskName = ":kmp-native:compileKotlinIosX64",
+                        compileTestTaskName = ":kmp-native:compileTestKotlinIosX64",
+                        testTaskName = ":kmp-native:iosX64Test",
+                    )
+                },
             )
 
             isWindows -> listOf(

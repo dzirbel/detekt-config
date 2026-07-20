@@ -16,9 +16,13 @@ kotlin {
     val isWindows = osName.contains("Windows", ignoreCase = true)
     val isArm64 = osArch.equals("aarch64", ignoreCase = true) || osArch.equals("arm64", ignoreCase = true)
     if (isMac) {
-        iosX64()
         iosArm64()
-        iosSimulatorArm64()
+        // Simulator test executables only run on a matching macOS host architecture.
+        if (isArm64) {
+            iosSimulatorArm64()
+        } else {
+            iosX64()
+        }
     } else if (isWindows) {
         mingwX64()
     } else {
@@ -56,13 +60,10 @@ kotlin {
                 val iosMain = create("iosMain") {
                     dependsOn(commonMain)
                 }
-                getByName("iosX64Main") {
-                    dependsOn(iosMain)
-                }
                 getByName("iosArm64Main") {
                     dependsOn(iosMain)
                 }
-                getByName("iosSimulatorArm64Main") {
+                getByName(if (isArm64) "iosSimulatorArm64Main" else "iosX64Main") {
                     dependsOn(iosMain)
                 }
             }
@@ -70,13 +71,10 @@ kotlin {
                 val iosTest = create("iosTest") {
                     dependsOn(commonTest)
                 }
-                getByName("iosX64Test") {
-                    dependsOn(iosTest)
-                }
                 getByName("iosArm64Test") {
                     dependsOn(iosTest)
                 }
-                getByName("iosSimulatorArm64Test") {
+                getByName(if (isArm64) "iosSimulatorArm64Test" else "iosX64Test") {
                     dependsOn(iosTest)
                 }
             }

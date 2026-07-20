@@ -19,7 +19,8 @@ private val compilerErrorCountRegex = Regex(
 )
 
 abstract class SampleProjectTest(private val projectName: String) {
-    private val fixtureRoot = Files.createTempDirectory("detekt-config-test-").toFile()
+    // Detekt reports canonical paths; this also resolves macOS's /var -> /private/var alias.
+    private val fixtureRoot = Files.createTempDirectory("detekt-config-test-").toFile().canonicalFile
 
     @get:Rule
     val fixtureCleanup = object : ExternalResource() {
