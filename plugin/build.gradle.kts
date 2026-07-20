@@ -5,21 +5,15 @@ plugins {
     `maven-publish`
 }
 
-private val versions = rootProject.extra["versions"] as Provider<Properties>
-private val detektVersion = versions.map { it["detekt"] }
-
-val kotlinPluginForTests = configurations.create("kotlinPluginForTests") {
-    isCanBeConsumed = false
-    isCanBeResolved = true
-}
+private val versions = rootProject.extra["versions"] as Properties
+private val detektVersion = versions.getProperty("detekt")
 
 dependencies {
     compileOnly(kotlin("gradle-plugin"))
-    implementation("dev.detekt:detekt-gradle-plugin:${detektVersion.get()}")
+    implementation("dev.detekt:detekt-gradle-plugin:$detektVersion")
 
     testImplementation(kotlin("test"))
     testImplementation(kotlin("gradle-plugin"))
-    kotlinPluginForTests(kotlin("gradle-plugin"))
 }
 
 gradlePlugin {
@@ -40,8 +34,8 @@ tasks.validatePlugins {
     ignoreFailures = false
 }
 
-tasks.withType<PluginUnderTestMetadata>().configureEach {
-    pluginClasspath.from(kotlinPluginForTests)
+tasks.processTestResources {
+    exclude("**/.gradle/**", "**/.kotlin/**", "**/build/**")
 }
 
 publishing {

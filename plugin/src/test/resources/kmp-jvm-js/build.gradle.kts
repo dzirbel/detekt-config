@@ -1,5 +1,5 @@
 plugins {
-    kotlin("multiplatform") version libs.versions.kotlin
+    kotlin("multiplatform")
     id("io.github.dzirbel.detekt-config")
 }
 

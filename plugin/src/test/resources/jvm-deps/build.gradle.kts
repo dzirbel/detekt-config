@@ -1,7 +1,7 @@
 import io.github.dzirbel.DetektConfigExtension
 
 plugins {
-    kotlin("jvm") version libs.versions.kotlin
+    kotlin("jvm")
     id("io.github.dzirbel.detekt-config")
 }
 

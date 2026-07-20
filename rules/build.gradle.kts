@@ -5,15 +5,15 @@ plugins {
     `maven-publish`
 }
 
-private val versions = rootProject.extra["versions"] as Provider<Properties>
-private val detektVersion = versions.map { it["detekt"] }
+private val versions = rootProject.extra["versions"] as Properties
+private val detektVersion = versions.getProperty("detekt")
 
 dependencies {
-    compileOnly("dev.detekt:detekt-api:${detektVersion.get()}")
+    compileOnly("dev.detekt:detekt-api:$detektVersion")
 
     testImplementation(kotlin("test"))
-    testImplementation("dev.detekt:detekt-test:${detektVersion.get()}")
-    testImplementation("dev.detekt:detekt-test-assertj:${detektVersion.get()}")
+    testImplementation("dev.detekt:detekt-test:$detektVersion")
+    testImplementation("dev.detekt:detekt-test-assertj:$detektVersion")
     testImplementation(libs.assertj)
 }
 

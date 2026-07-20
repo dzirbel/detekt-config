@@ -7,12 +7,13 @@ val versions = providers.fileContents(versionsFile).asText
     .map { text ->
         Properties().apply { load(text.byteInputStream()) }
     }
+    .get()
 extra["versions"] = versions
 
 subprojects {
     group = "io.github.dzirbel"
 
-    version = versions.map { it["rules"] }.get()
+    version = versions.getProperty("rules")
 
     tasks.withType<Test>().configureEach {
         testLogging {

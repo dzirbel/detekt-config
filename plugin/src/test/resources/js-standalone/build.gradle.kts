@@ -1,5 +1,5 @@
 plugins {
-    kotlin("js") version libs.versions.kotlin
+    kotlin("js")
     id("io.github.dzirbel.detekt-config")
 }
 
