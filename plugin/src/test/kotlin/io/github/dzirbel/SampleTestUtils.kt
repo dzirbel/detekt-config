@@ -9,6 +9,11 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 private val ansiRegex = Regex("\\u001B\\[[;\\d]*m")
+private val detektDiagnosticRegex = Regex("^[ewi]: (.+:\\d+:\\d+) (.+)$")
+private val normalizedDiagnosticRegex = Regex("^.+:\\d+:\\d+: .+$")
+private val compilerErrorCountRegex = Regex(
+    "^There were \\d+ compiler errors found during analysis\\. This affects accuracy of reporting\\.$",
+)
 
 internal fun File.gradle(task: String): GradleRunner {
     return GradleRunner.create()
@@ -86,21 +91,25 @@ private fun BuildResult.findTaskOutput(path: String): List<String> {
     if (startIndex == -1) return emptyList()
     return buildList {
         var i = startIndex + 1
-        var hasOutput = false
         while (i < lines.size) {
             val line = lines[i]
             if (taskLineRegex().containsMatchIn(line)) break
-            if (line.isBlank()) {
-                if (hasOutput) break
-                i++
-                continue
+            val diagnostic = detektDiagnosticRegex.matchEntire(line)
+            val normalizedLine = diagnostic?.let { "${it.groupValues[1]}: ${it.groupValues[2]}" } ?: line
+            if (normalizedLine.isDetektOutput()) {
+                add(normalizedLine)
             }
-            add(line)
-            hasOutput = true
             i++
         }
     }
 }
+
+// TODO find a more elegant solution
+private fun String.isDetektOutput(): Boolean =
+    normalizedDiagnosticRegex.matches(this) ||
+        compilerErrorCountRegex.matches(this) ||
+        startsWith("Run detekt CLI with ") ||
+        startsWith("See https://mrmans0n.github.io/compose-rules/")
 
 private fun BuildResult.findTaskLines(path: String): Sequence<String> =
     outputLines().filter { line -> taskLineRegex(path).containsMatchIn(line) }

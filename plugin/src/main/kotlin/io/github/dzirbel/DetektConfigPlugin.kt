@@ -14,7 +14,6 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
-import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 class DetektConfigPlugin : Plugin<Project> {
@@ -55,6 +54,9 @@ private fun Project.configureDetektDefaultTask() {
         detektRoot.configure { dependsOn(detektTask) }
 
         val compileTaskProvider = compilation.compileTaskProvider
+        val sourceDirectories = providers.provider {
+            compilation.allKotlinSourceSets.map { it.kotlin.sourceDirectories }
+        }
 
         detektTask.configure {
             group = "verification"
@@ -65,14 +67,23 @@ private fun Project.configureDetektDefaultTask() {
                 }
             }
             dependsOn(compileTaskProvider)
-            // TODO avoid realizing compile tasks at configuration time once classpath/source wiring can be fully lazy.
-            val compileTask = compileTaskProvider.get()
-            val kotlinCompileTask = compileTask as? AbstractKotlinCompileTool<*>
-            if (kotlinCompileTask != null) {
-                setSource(kotlinCompileTask.sources)
-            }
-            if (compileTask is KotlinCompile) {
-                classpath.setFrom(compilation.output.classesDirs, compileTask.libraries)
+            setSource(sourceDirectories)
+            apiVersion.convention(
+                compileTaskProvider.flatMap { it.compilerOptions.apiVersion.map { version -> version.version } }
+            )
+            languageVersion.convention(
+                compileTaskProvider.flatMap { it.compilerOptions.languageVersion.map { version -> version.version } }
+            )
+            freeCompilerArgs.convention(compileTaskProvider.flatMap { it.compilerOptions.freeCompilerArgs })
+            optIn.convention(compileTaskProvider.flatMap { it.compilerOptions.optIn })
+            if (compilation.platformType == KotlinPlatformType.jvm) {
+                val kotlinCompileTask = compileTaskProvider.map { it as KotlinCompile }
+                classpath.setFrom(compilation.output.classesDirs, kotlinCompileTask.map { it.libraries })
+                friendPaths.setFrom(kotlinCompileTask.map { it.friendPaths })
+                jvmTarget.convention(
+                    kotlinCompileTask.flatMap { it.compilerOptions.jvmTarget.map { target -> target.target } }
+                )
+                noJdk.convention(kotlinCompileTask.flatMap { it.compilerOptions.noJdk })
             } else {
                 classpath.setFrom(detektClasspath)
             }

@@ -41,7 +41,9 @@ class KmpComposeProjectTest {
         assertEquals(
             listOf(
                 "${composeFile.absolutePath}:7:14: This @Composable function has a modifier parameter but it doesn't have a default value.",
-                "See https://mrmans0n.github.io/compose-rules/rules/#modifiers-should-have-default-parameters for more information. [ModifierWithoutDefault]"
+                "See https://mrmans0n.github.io/compose-rules/rules/#modifiers-should-have-default-parameters for more information. [ModifierWithoutDefault]",
+                "${composeFile.absolutePath}:12:1: This @Composable declaration does not use composition and should not be marked @Composable.",
+                "See https://mrmans0n.github.io/compose-rules/rules/#do-not-mark-functions-as-composable-when-they-dont-need-it for more information. [UnnecessaryComposable]",
             ),
             output,
         )

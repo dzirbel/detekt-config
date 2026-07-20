@@ -1,7 +1,7 @@
 [versions]
-assertj = "3.25.3"
-compose = "1.10.0"
-kotlin = "2.3.0"
+assertj = "3.27.7"
+compose = "1.11.1"
+kotlin = "2.4.10"
 
 [libraries]
 assertj = { module = "org.assertj:assertj-core", version.ref = "assertj" }

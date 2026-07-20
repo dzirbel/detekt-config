@@ -28,7 +28,7 @@ kotlin {
     }
 
     sourceSets {
-        val commonTest by getting {
+        val commonTest = getByName("commonTest") {
             dependencies {
                 implementation(kotlin("test"))
             }
@@ -36,41 +36,41 @@ kotlin {
         if (isMac) {
             if (findByName("iosMain") == null) {
                 // Ensure iOS source sets exist even if the default hierarchy template is disabled.
-                val commonMain by getting
-                val iosMain by creating {
+                val commonMain = getByName("commonMain")
+                val iosMain = create("iosMain") {
                     dependsOn(commonMain)
                 }
-                val iosX64Main by getting {
+                getByName("iosX64Main") {
                     dependsOn(iosMain)
                 }
-                val iosArm64Main by getting {
+                getByName("iosArm64Main") {
                     dependsOn(iosMain)
                 }
-                val iosSimulatorArm64Main by getting {
+                getByName("iosSimulatorArm64Main") {
                     dependsOn(iosMain)
                 }
             }
             if (findByName("iosTest") == null) {
-                val iosTest by creating {
+                val iosTest = create("iosTest") {
                     dependsOn(commonTest)
                 }
-                val iosX64Test by getting {
+                getByName("iosX64Test") {
                     dependsOn(iosTest)
                 }
-                val iosArm64Test by getting {
+                getByName("iosArm64Test") {
                     dependsOn(iosTest)
                 }
-                val iosSimulatorArm64Test by getting {
+                getByName("iosSimulatorArm64Test") {
                     dependsOn(iosTest)
                 }
             }
         } else if (isWindows) {
-            val mingwX64Main by getting
+            getByName("mingwX64Main")
         } else {
             if (isArm64) {
-                val linuxArm64Main by getting
+                getByName("linuxArm64Main")
             } else {
-                val linuxX64Main by getting
+                getByName("linuxX64Main")
             }
         }
     }

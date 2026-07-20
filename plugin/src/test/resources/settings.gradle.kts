@@ -17,7 +17,6 @@ dependencyResolutionManagement {
 }
 
 include("js")
-include("js-standalone")
 include("jvm")
 include("jvm-clean")
 include("jvm-custom")

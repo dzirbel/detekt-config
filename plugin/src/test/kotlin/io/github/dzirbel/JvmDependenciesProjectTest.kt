@@ -19,6 +19,8 @@ class JvmDependenciesProjectTest {
         val expected = expectedWarnings(sampleFile) + listOf(
             "${sampleFile.absolutePath}:6:24: The method `kotlinx.coroutines.runBlocking` has been forbidden: " +
                 "runBlocking blocks threads. Use a suspend function instead. [ForbiddenMethodCall]",
+            "${sampleFile.absolutePath}:6:5: Fully qualified function call 'kotlinx.coroutines.runBlocking' can be " +
+                "replaced with an import. [UnnecessaryFullyQualifiedName]",
         )
         assertSameContents(expected, mainOutput)
     }

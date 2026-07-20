@@ -993,7 +993,7 @@ style:
     active: true
   SerialVersionUIDInSerializableClass:
     active: false
-  SpacingAfterPackageDeclaration:
+  SpacingAfterPackageAndImports:
     active: true
   StringShouldBeRawString:
     active: true

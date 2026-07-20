@@ -3,25 +3,35 @@ Compose:
     active: true
   ComposableNaming:
     active: true
+  ComposableNestingDepth:
+    active: false
   ComposableParamOrder:
     active: true
   CompositionLocalAllowlist:
     active: false
   CompositionLocalNaming:
     active: true
+  ConditionHoist:
+    active: true
   ContentEmitterReturningValues:
+    active: true
+  ContentSlotReused:
     active: true
   ContentTrailingLambda:
     active: true
   DefaultsVisibility:
     active: true
+  InvalidReadOnlyComposable:
+    active: true
+  LambdaParameterEventTrailing:
+    active: true
   LambdaParameterInRestartableEffect:
     active: true
   Material2:
     active: true
-  ModifierClickableOrder:
+  MissingReadOnlyComposable:
     active: true
-  ModifierComposable:
+  ModifierClickableOrder:
     active: true
   ModifierComposed:
     active: false
@@ -47,13 +57,23 @@ Compose:
     active: true
   PreviewAnnotationNaming:
     active: true
+  PreviewNaming:
+    active: false
   PreviewPublic:
     active: true
   RememberMissing:
     active: true
   RememberContentMissing:
     active: true
+  StaleRememberUpdatedStateInRemember:
+    active: true
+  StateParam:
+    active: true
+  UnnecessaryComposable:
+    active: true
   UnstableCollections:
+    active: true
+  VarsWithoutStateBacking:
     active: true
   ViewModelForwarding:
     active: false

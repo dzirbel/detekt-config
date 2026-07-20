@@ -9,21 +9,21 @@ repositories {
 
 kotlin {
     jvm()
-    js(IR) {
+    js {
         nodejs()
     }
 
     sourceSets {
-        val commonMain by getting
-        val commonTest by getting {
+        val commonMain = getByName("commonMain")
+        val commonTest = getByName("commonTest") {
             dependencies {
                 implementation(kotlin("test"))
             }
         }
-        val sharedMain by creating {
+        val sharedMain = create("sharedMain") {
             dependsOn(commonMain)
         }
-        val sharedTest by creating {
+        val sharedTest = create("sharedTest") {
             dependsOn(commonTest)
         }
         jvmMain {

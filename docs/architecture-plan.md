@@ -5,9 +5,10 @@ add functional coverage before changing the supported task graph.
 
 ## 1. Define and enforce the support contract
 
-Create a small compatibility matrix covering JVM, Android JVM, standalone JS while Kotlin still supports it, and KMP
-JVM/JS/native projects. For each project type, cover main, test, and custom compilations where the Kotlin plugin exposes
-them. A supported type-resolved task must:
+Create a small compatibility matrix covering JVM, Android JVM, and KMP JVM/JS/native projects. If compatibility with the
+removed standalone Kotlin/JS plugin remains a goal, test it in a separately version-pinned legacy fixture rather than the
+current Kotlin fixture build. For each project type, cover main, test, and custom compilations where the Kotlin plugin
+exposes them. A supported type-resolved task must:
 
 - analyze exactly the compilation's source hierarchy;
 - resolve project and external dependency symbols;
@@ -31,10 +32,10 @@ JS/native compilations. Keep one documented naming order and one aggregation pat
 true lifecycle task (or empty the upstream plain task's sources) whenever per-compilation tasks exist, so a clean JVM
 project is not analyzed a second time without type resolution.
 
-Wire task inputs from providers without calling `compileTaskProvider.get()` during configuration. Carry through sources,
-classpath, friend paths, language/API versions, opt-ins, free compiler arguments, explicit API mode, JVM target, and
-multiplatform mode where applicable. Add a configuration-cache functional test that runs twice and rejects configuration
-warnings.
+Provider-based wiring now carries source directories, language/API versions, opt-ins, free compiler arguments, JVM
+classpath, friend paths, JVM target, no-JDK mode, and multiplatform mode without realizing compile tasks during
+configuration. Preserve that wiring during the topology replacement, add explicit API mode, and add a
+configuration-cache functional test that runs twice and rejects configuration warnings.
 
 Acceptance criterion: a KMP JVM/JS fixture exposes and runs one type-resolved analysis task per compilation through the
 root lifecycle, while upstream source-set or baseline tasks remain available only when they serve a distinct purpose.

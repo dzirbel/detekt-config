@@ -10,8 +10,10 @@ The upstream detekt Gradle plugin creates the plain `detekt` task, source-set ta
 Android, and JVM multiplatform compilations. This plugin additionally observes Kotlin compilations and makes its root
 `detekt` task depend on one task per non-common compilation:
 
-- JVM tasks use the Kotlin compile task's sources, the compilation output, and compile libraries.
-- JS and native tasks use the Kotlin compile task's sources and detekt's own CLI classpath.
+- JVM tasks use the compilation's Kotlin source-set directories, output, compile libraries, and friend paths.
+- JS and native tasks use the compilation's Kotlin source-set directories and detekt's own CLI classpath.
+- Tasks inherit the compilation's language/API versions, opt-ins, and free compiler arguments. JVM tasks additionally
+  inherit the JVM target and no-JDK mode.
 - Multiplatform tasks enable detekt's multiplatform analysis mode.
 - Every configured analysis task depends on its corresponding Kotlin compile task.
 
@@ -28,7 +30,6 @@ detekt tasks than the root lifecycle task runs.
 - The root `detekt` task remains an upstream `Detekt` analysis task rather than a pure lifecycle task. In a standard JVM
   layout it can analyze the default main and test directories again, without the compilation classpath, after the
   type-resolved tasks pass.
-- The plugin realizes each Kotlin compile task during configuration to obtain its sources and libraries.
 - Android behavior comes from the upstream detekt integration and does not have repository-owned TestKit coverage.
 
 When findings differ between otherwise equivalent targets, inspect the analysis task's sources and classpath, enable
