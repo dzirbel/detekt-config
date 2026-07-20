@@ -5,6 +5,10 @@ add functional coverage before changing the supported task graph.
 
 ## 1. Define and enforce the support contract
 
+The current contract and its enforced compatibility matrix are documented in
+[the type-resolution support contract](support-contract.md). Android remains provisional until phase 3 adds
+repository-owned fixtures; custom KMP topology coverage belongs to phase 2.
+
 Create a small compatibility matrix covering JVM, Android JVM, and KMP JVM/JS/native projects. If compatibility with the
 removed standalone Kotlin/JS plugin remains a goal, test it in a separately version-pinned legacy fixture rather than the
 current Kotlin fixture build. For each project type, cover main, test, and custom compilations where the Kotlin plugin

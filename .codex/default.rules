@@ -1,0 +1,9 @@
+prefix_rule(
+    pattern = ["./gradlew"],
+    decision = "allow",
+    justification = "Gradle wrapper commands are the repo build and verification entrypoint.",
+    match = [
+        "./gradlew check",
+        "./gradlew :plugin:test",
+    ],
+)

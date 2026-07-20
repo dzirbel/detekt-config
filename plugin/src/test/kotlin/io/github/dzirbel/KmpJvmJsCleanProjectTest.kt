@@ -1,11 +1,8 @@
 package io.github.dzirbel
 
-import java.io.File
 import kotlin.test.Test
 
-class KmpJvmJsCleanProjectTest {
-
-    private val projectDir = File("src/test/resources/kmp-jvm-js-clean")
+class KmpJvmJsCleanProjectTest : SampleProjectTest("kmp-jvm-js-clean") {
 
     @Test
     fun `compilation succeeds`() {
@@ -14,7 +11,18 @@ class KmpJvmJsCleanProjectTest {
 
     @Test
     fun `jvm tests succeed`() {
-        projectDir.gradle("jvmTest").build()
+        val result = projectDir.gradle("jvmTest").build()
+
+        assertTaskPassed(result, ":kmp-jvm-js-clean:jvmTest")
+        assertTestsExecuted(projectDir, "jvmTest")
+    }
+
+    @Test
+    fun `js tests succeed`() {
+        val result = projectDir.gradle("jsNodeTest").build()
+
+        assertTaskPassed(result, ":kmp-jvm-js-clean:jsNodeTest")
+        assertTestsExecuted(projectDir, "jsNodeTest")
     }
 
     @Test
@@ -25,10 +33,10 @@ class KmpJvmJsCleanProjectTest {
         assertTaskPassed(result, ":kmp-jvm-js-clean:compileKotlinJs")
         assertTaskPassed(result, ":kmp-jvm-js-clean:compileTestKotlinJvm")
         assertTaskPassed(result, ":kmp-jvm-js-clean:compileTestKotlinJs")
-        assertTaskPassed(result, ":kmp-jvm-js-clean:detektJvmMain")
-        assertTaskPassed(result, ":kmp-jvm-js-clean:detektJsMain")
-        assertTaskPassed(result, ":kmp-jvm-js-clean:detektJvmTest")
-        assertTaskPassed(result, ":kmp-jvm-js-clean:detektJsTest")
+        assertDetektTaskPassed(result, ":kmp-jvm-js-clean:detektJvmMain")
+        assertDetektTaskPassed(result, ":kmp-jvm-js-clean:detektJsMain")
+        assertDetektTaskPassed(result, ":kmp-jvm-js-clean:detektJvmTest")
+        assertDetektTaskPassed(result, ":kmp-jvm-js-clean:detektJsTest")
         assertTaskPassed(result, ":kmp-jvm-js-clean:check")
     }
 
@@ -40,9 +48,9 @@ class KmpJvmJsCleanProjectTest {
         assertTaskPassed(result, ":kmp-jvm-js-clean:compileKotlinJs")
         assertTaskPassed(result, ":kmp-jvm-js-clean:compileTestKotlinJvm")
         assertTaskPassed(result, ":kmp-jvm-js-clean:compileTestKotlinJs")
-        assertTaskPassed(result, ":kmp-jvm-js-clean:detektJvmMain")
-        assertTaskPassed(result, ":kmp-jvm-js-clean:detektJsMain")
-        assertTaskPassed(result, ":kmp-jvm-js-clean:detektJvmTest")
-        assertTaskPassed(result, ":kmp-jvm-js-clean:detektJsTest")
+        assertDetektTaskPassed(result, ":kmp-jvm-js-clean:detektJvmMain")
+        assertDetektTaskPassed(result, ":kmp-jvm-js-clean:detektJsMain")
+        assertDetektTaskPassed(result, ":kmp-jvm-js-clean:detektJvmTest")
+        assertDetektTaskPassed(result, ":kmp-jvm-js-clean:detektJsTest")
     }
 }

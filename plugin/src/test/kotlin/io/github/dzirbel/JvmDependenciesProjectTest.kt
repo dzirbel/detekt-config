@@ -1,11 +1,9 @@
 package io.github.dzirbel
 
-import java.io.File
 import kotlin.test.Test
 
-class JvmDependenciesProjectTest {
+class JvmDependenciesProjectTest : SampleProjectTest("jvm-deps") {
 
-    private val projectDir = File("src/test/resources/jvm-deps")
     private val sampleFile = projectDir.resolve("src/main/kotlin/io/github/dzirbel/Sample.kt")
 
     @Test

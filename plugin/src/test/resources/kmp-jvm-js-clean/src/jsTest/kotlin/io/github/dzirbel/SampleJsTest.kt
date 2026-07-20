@@ -5,8 +5,8 @@ import kotlin.test.assertEquals
 
 class SampleJsTest {
     @Test
-    fun buildsJs() {
-        val result = buildJs("Ada")
-        assertEquals(SampleCommon("shared:js:Ada"), result)
+    fun buildsSharedCodeForJs() {
+        val result = buildShared("Ada")
+        assertEquals(SampleCommon("shared:Ada"), result)
     }
 }

@@ -1,11 +1,9 @@
 package io.github.dzirbel
 
-import java.io.File
 import kotlin.test.Test
 
-class KmpJvmJsProjectTest {
+class KmpJvmJsProjectTest : SampleProjectTest("kmp-jvm-js") {
 
-    private val projectDir = File("src/test/resources/kmp-jvm-js")
     private val commonFile = projectDir.resolve("src/commonMain/kotlin/io/github/dzirbel/SampleCommon.kt")
     private val sharedFile = projectDir.resolve("src/sharedMain/kotlin/io/github/dzirbel/SampleShared.kt")
     private val jvmFile = projectDir.resolve("src/jvmMain/kotlin/io/github/dzirbel/SampleJvm.kt")
@@ -22,7 +20,18 @@ class KmpJvmJsProjectTest {
 
     @Test
     fun `jvm tests succeed`() {
-        projectDir.gradle("jvmTest").build()
+        val result = projectDir.gradle("jvmTest").build()
+
+        assertTaskPassed(result, ":kmp-jvm-js:jvmTest")
+        assertTestsExecuted(projectDir, "jvmTest")
+    }
+
+    @Test
+    fun `js tests succeed`() {
+        val result = projectDir.gradle("jsNodeTest").build()
+
+        assertTaskPassed(result, ":kmp-jvm-js:jsNodeTest")
+        assertTestsExecuted(projectDir, "jsNodeTest")
     }
 
     @Test
@@ -47,10 +56,14 @@ class KmpJvmJsProjectTest {
         val jvmTestOutput = assertTaskFailed(result, ":kmp-jvm-js:detektJvmTest")
         val jsTestOutput = assertTaskFailed(result, ":kmp-jvm-js:detektJsTest")
         assertSameContents(expectedWarnings(commonFile, sharedFile, jvmFile), jvmOutput)
-        assertSameContents(expectedWarnings(commonFile, sharedFile, jsFile), jsOutput)
+        assertSameContents(
+            expectedWarnings(commonFile, sharedFile, jsFile) + expectedExternalDependencyWarning(jsFile),
+            jsOutput,
+        )
         assertSameContents(expectedTestWarnings(commonTestFile, sharedTestFile, jvmTestFile), jvmTestOutput)
         assertSameContents(
-            expectedTestWarnings(commonTestFile, sharedTestFile, jsTestFile, compilerErrors = 12),
+            expectedTestWarnings(commonTestFile, sharedTestFile, jsTestFile) +
+                expectedExternalDependencyWarning(jsTestFile),
             jsTestOutput,
         )
     }
@@ -77,10 +90,14 @@ class KmpJvmJsProjectTest {
         val jvmTestOutput = assertTaskFailed(result, ":kmp-jvm-js:detektJvmTest")
         val jsTestOutput = assertTaskFailed(result, ":kmp-jvm-js:detektJsTest")
         assertSameContents(expectedWarnings(commonFile, sharedFile, jvmFile), jvmOutput)
-        assertSameContents(expectedWarnings(commonFile, sharedFile, jsFile), jsOutput)
+        assertSameContents(
+            expectedWarnings(commonFile, sharedFile, jsFile) + expectedExternalDependencyWarning(jsFile),
+            jsOutput,
+        )
         assertSameContents(expectedTestWarnings(commonTestFile, sharedTestFile, jvmTestFile), jvmTestOutput)
         assertSameContents(
-            expectedTestWarnings(commonTestFile, sharedTestFile, jsTestFile, compilerErrors = 12),
+            expectedTestWarnings(commonTestFile, sharedTestFile, jsTestFile) +
+                expectedExternalDependencyWarning(jsTestFile),
             jsTestOutput,
         )
     }

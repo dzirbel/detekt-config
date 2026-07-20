@@ -1,11 +1,9 @@
 package io.github.dzirbel
 
-import java.io.File
 import kotlin.test.Test
 
-class JvmProjectTest {
+class JvmProjectTest : SampleProjectTest("jvm") {
 
-    private val projectDir = File("src/test/resources/jvm")
     private val sampleFile = projectDir.resolve("src/main/kotlin/io/github/dzirbel/Sample.kt")
     private val testFile = projectDir.resolve("src/test/kotlin/io/github/dzirbel/SampleTest.kt")
 
@@ -16,7 +14,10 @@ class JvmProjectTest {
 
     @Test
     fun `tests succeed`() {
-        projectDir.gradle("test").build()
+        val result = projectDir.gradle("test").build()
+
+        assertTaskPassed(result, ":jvm:test")
+        assertTestsExecuted(projectDir, "test")
     }
 
     @Test

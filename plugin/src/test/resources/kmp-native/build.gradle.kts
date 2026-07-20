@@ -1,3 +1,5 @@
+import io.github.dzirbel.DetektConfigExtension
+
 plugins {
     kotlin("multiplatform")
     id("io.github.dzirbel.detekt-config")
@@ -21,16 +23,30 @@ kotlin {
         mingwX64()
     } else {
         if (isArm64) {
-            linuxArm64()
+            linuxArm64 {
+                binaries.configureEach {
+                    linkerOpts("-Wl,--as-needed")
+                }
+            }
         } else {
-            linuxX64()
+            linuxX64 {
+                binaries.configureEach {
+                    linkerOpts("-Wl,--as-needed")
+                }
+            }
         }
     }
 
     sourceSets {
+        commonMain {
+            dependencies {
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
+            }
+        }
         val commonTest = getByName("commonTest") {
             dependencies {
                 implementation(kotlin("test"))
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
             }
         }
         if (isMac) {
@@ -74,4 +90,14 @@ kotlin {
             }
         }
     }
+}
+
+detektConfig {
+    forbiddenMethodCalls.addAll(DetektConfigExtension.DEFAULT_FORBIDDEN_METHOD_CALLS)
+    forbiddenMethodCalls.add(
+        DetektConfigExtension.ForbiddenMethodCall(
+            value = "kotlinx.coroutines.CoroutineScope",
+            reason = "Use an application-owned coroutine scope instead.",
+        ),
+    )
 }

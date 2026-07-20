@@ -1,11 +1,9 @@
 package io.github.dzirbel
 
-import java.io.File
 import kotlin.test.Test
 
-class JvmCustomProjectTest {
+class JvmCustomProjectTest : SampleProjectTest("jvm-custom") {
 
-    private val projectDir = File("src/test/resources/jvm-custom")
     private val sampleFile = projectDir.resolve("src/main/kotlin/io/github/dzirbel/Sample.kt")
     private val testFile = projectDir.resolve("src/test/kotlin/io/github/dzirbel/SampleTest.kt")
     private val integrationTestFile =

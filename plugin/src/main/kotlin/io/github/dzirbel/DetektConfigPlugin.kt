@@ -5,10 +5,16 @@ import dev.detekt.gradle.extensions.DetektExtension
 import dev.detekt.gradle.extensions.FailOnSeverity
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+import org.gradle.api.attributes.Category
+import org.gradle.api.attributes.Usage
+import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.getByType
+import org.gradle.kotlin.dsl.named
+import org.jetbrains.kotlin.gradle.dsl.KotlinBaseExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinJsProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
@@ -76,6 +82,7 @@ private fun Project.configureDetektDefaultTask() {
             )
             freeCompilerArgs.convention(compileTaskProvider.flatMap { it.compilerOptions.freeCompilerArgs })
             optIn.convention(compileTaskProvider.flatMap { it.compilerOptions.optIn })
+            friendPaths.setFrom(compilation.associatedCompilations.map { it.output.allOutputs })
             if (compilation.platformType == KotlinPlatformType.jvm) {
                 val kotlinCompileTask = compileTaskProvider.map { it as KotlinCompile }
                 classpath.setFrom(compilation.output.classesDirs, kotlinCompileTask.map { it.libraries })
@@ -85,7 +92,11 @@ private fun Project.configureDetektDefaultTask() {
                 )
                 noJdk.convention(kotlinCompileTask.flatMap { it.compilerOptions.noJdk })
             } else {
-                classpath.setFrom(detektClasspath)
+                classpath.setFrom(
+                    detektClasspath,
+                    detektJvmProjectClasspath(compilation),
+                    detektAnalysisClasspath(taskName, compilation),
+                )
             }
             if (isMultiplatform) {
                 multiPlatformEnabled.set(true)
@@ -123,6 +134,66 @@ private fun Project.configureDetektDefaultTask() {
             }
         }
     }
+}
+
+private fun Project.detektJvmProjectClasspath(compilation: KotlinCompilation<*>): FileCollection {
+    val associatedCompilationNames = compilation.associatedCompilations.map { it.name }.toSet()
+    if (associatedCompilationNames.isEmpty()) return files()
+    val kotlin = extensions.findByType(KotlinMultiplatformExtension::class.java) ?: return files()
+
+    return objects.fileCollection().from(
+        providers.provider {
+            kotlin.targets
+                .filter { target -> target.platformType == KotlinPlatformType.jvm }
+                .flatMap { target ->
+                    target.compilations
+                        .filter { candidate -> candidate.name in associatedCompilationNames }
+                        .map { candidate -> candidate.output.allOutputs }
+                }
+        },
+    )
+}
+
+private fun Project.detektAnalysisClasspath(
+    taskName: String,
+    compilation: KotlinCompilation<*>,
+): FileCollection {
+    val analysisDependenciesName = "${taskName}AnalysisDependencies"
+    if (compilation.name == KotlinCompilation.TEST_COMPILATION_NAME) {
+        configurations.dependencyScope(analysisDependenciesName) {
+            defaultDependencies {
+                add(
+                    this@detektAnalysisClasspath.dependencies.create(
+                        "org.jetbrains.kotlin:kotlin-test-junit:" +
+                            extensions.getByType<KotlinBaseExtension>().coreLibrariesVersion,
+                    ),
+                )
+            }
+        }
+    }
+    val configuration = configurations.resolvable("${taskName}AnalysisClasspath") {
+        extendsFrom(configurations.getByName(compilation.compileDependencyConfigurationName))
+        if (compilation.name == KotlinCompilation.TEST_COMPILATION_NAME) {
+            extendsFrom(configurations.getByName(analysisDependenciesName))
+        }
+        attributes {
+            attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.LIBRARY))
+            attribute(Usage.USAGE_ATTRIBUTE, objects.named("kotlin-api"))
+            attribute(KotlinPlatformType.attribute, KotlinPlatformType.jvm)
+        }
+    }
+    return objects.fileCollection().from(
+        configuration.map { analysisConfiguration ->
+            analysisConfiguration.incoming.artifactView {
+                isLenient = true
+                componentFilter { identifier ->
+                    identifier !is ModuleComponentIdentifier ||
+                        identifier.group != "org.jetbrains.kotlin" ||
+                        !identifier.module.startsWith("kotlin-stdlib")
+                }
+            }.files
+        },
+    )
 }
 
 private fun Project.detektTaskProvider(taskName: String): TaskProvider<Detekt> {

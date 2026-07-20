@@ -11,7 +11,9 @@ Android, and JVM multiplatform compilations. This plugin additionally observes K
 `detekt` task depend on one task per non-common compilation:
 
 - JVM tasks use the compilation's Kotlin source-set directories, output, compile libraries, and friend paths.
-- JS and native tasks use the compilation's Kotlin source-set directories and detekt's own CLI classpath.
+- JS and native tasks use the compilation's Kotlin source-set directories, detekt's CLI classpath, associated
+  compilation outputs as friend paths, a sibling JVM target's associated output when one exists, and a lenient
+  JVM-compatible view of declared dependencies.
 - Tasks inherit the compilation's language/API versions, opt-ins, and free compiler arguments. JVM tasks additionally
   inherit the JVM target and no-JDK mode.
 - Multiplatform tasks enable detekt's multiplatform analysis mode.
@@ -23,15 +25,13 @@ detekt tasks than the root lifecycle task runs.
 
 ## Known limitations
 
-- JS test analysis currently emits Kotlin compiler errors. The functional tests preserve this behavior explicitly, but
-  those errors mean type-resolved findings may be incomplete.
-- Native analysis uses detekt's CLI classpath rather than the compilation dependency classpath. Its current fixtures find
-  the expected issues, but they do not prove resolution of external native dependencies.
+- Detekt's analysis engine cannot consume target-only `.klib` dependencies. JS and native analysis resolves dependencies
+  that publish JVM variants and skips target-only artifacts; see [the support contract](support-contract.md).
 - The root `detekt` task remains an upstream `Detekt` analysis task rather than a pure lifecycle task. In a standard JVM
   layout it can analyze the default main and test directories again, without the compilation classpath, after the
   type-resolved tasks pass.
 - Android behavior comes from the upstream detekt integration and does not have repository-owned TestKit coverage.
 
 When findings differ between otherwise equivalent targets, inspect the analysis task's sources and classpath, enable
-detekt debug logging, and treat any reported compiler errors as an analysis correctness failure. The intended fixes and
+detekt debug logging, and treat any reported compiler errors as an analysis correctness failure. The remaining fixes and
 acceptance criteria are tracked in [the architecture plan](architecture-plan.md).

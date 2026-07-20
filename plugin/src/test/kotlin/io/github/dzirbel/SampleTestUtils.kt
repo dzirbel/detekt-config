@@ -3,7 +3,10 @@ package io.github.dzirbel
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
+import org.junit.Rule
+import org.junit.rules.ExternalResource
 import java.io.File
+import java.nio.file.Files
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -14,6 +17,42 @@ private val normalizedDiagnosticRegex = Regex("^.+:\\d+:\\d+: .+$")
 private val compilerErrorCountRegex = Regex(
     "^There were \\d+ compiler errors found during analysis\\. This affects accuracy of reporting\\.$",
 )
+
+abstract class SampleProjectTest(private val projectName: String) {
+    private val fixtureRoot = Files.createTempDirectory("detekt-config-test-").toFile()
+
+    @get:Rule
+    val fixtureCleanup = object : ExternalResource() {
+        override fun after() {
+            fixtureRoot.deleteRecursively()
+        }
+    }
+
+    protected val projectDir: File = run {
+        val sourceRoot = File("src/test/resources")
+        copyFixtureResources(sourceRoot, fixtureRoot)
+
+        val repositoryRoot = File("..").canonicalFile.invariantSeparatorsPath
+        fixtureRoot.resolve("settings.gradle.kts").let { settingsFile ->
+            settingsFile.writeText(settingsFile.readText().replace("../../../..", repositoryRoot))
+        }
+        fixtureRoot.resolve(projectName)
+    }
+}
+
+private fun copyFixtureResources(sourceRoot: File, destinationRoot: File) {
+    val excludedDirectories = setOf(".gradle", ".kotlin", "build", "kotlin-js-store")
+    sourceRoot.walkTopDown()
+        .onEnter { directory -> directory == sourceRoot || directory.name !in excludedDirectories }
+        .forEach { source ->
+            val destination = destinationRoot.resolve(source.relativeTo(sourceRoot).path)
+            if (source.isDirectory) {
+                destination.mkdirs()
+            } else {
+                source.copyTo(destination)
+            }
+        }
+}
 
 internal fun File.gradle(task: String): GradleRunner {
     return GradleRunner.create()
@@ -34,8 +73,25 @@ internal fun assertTaskPassed(result: BuildResult, path: String): List<String> {
     return assertTaskRun(result, path, setOf(TaskOutcome.SUCCESS, TaskOutcome.UP_TO_DATE, TaskOutcome.FROM_CACHE))
 }
 
+internal fun assertDetektTaskPassed(result: BuildResult, path: String) {
+    assertSameContents(emptyList(), assertTaskPassed(result, path))
+}
+
 internal fun assertTaskNoSource(result: BuildResult, path: String): List<String> {
     return assertTaskRun(result, path, setOf(TaskOutcome.NO_SOURCE))
+}
+
+internal fun assertTestsExecuted(projectDir: File, taskName: String) {
+    val resultFiles = projectDir.resolve("build/test-results/$taskName")
+        .walkTopDown()
+        .filter { file -> file.isFile && file.extension == "xml" }
+        .toList()
+    assertTrue(resultFiles.isNotEmpty(), "no XML test results found for $taskName")
+
+    val testCount = resultFiles.sumOf { file ->
+        Regex("""\btests="(\d+)"""").find(file.readText())?.groupValues?.get(1)?.toInt() ?: 0
+    }
+    assertTrue(testCount > 0, "no tests were executed by $taskName")
 }
 
 internal fun assertFailedTasks(result: BuildResult, vararg tasks: String) {
@@ -49,37 +105,38 @@ internal fun <T : Comparable<T>> assertSameContents(expected: Iterable<T>, actua
 internal fun expectedWarnings(vararg files: File): Iterable<String> {
     return files.flatMap { file ->
         val path = file.absolutePath
+        val variable = file.locationOf("var x")
+        val print = file.locationOf("println")
         listOf(
-            "$path:4:5: Variable 'x' could be val. [VarCouldBeVal]",
-            "$path:4:5: Variable x is declared as `var` with a mutable type kotlin.collections.MutableSet. " +
+            "$path:${variable.line}:${variable.column}: Variable 'x' could be val. [VarCouldBeVal]",
+            "$path:${variable.line}:${variable.column}: Variable x is declared as `var` with a mutable type " +
+                "kotlin.collections.MutableSet. " +
                 "Consider using `val` or an immutable collection or value type [DoubleMutabilityForCollection]",
-            "$path:5:5: The method `kotlin.io.println` has been forbidden: println does not allow you to configure " +
+            "$path:${print.line}:${print.column}: The method `kotlin.io.println` has been forbidden: " +
+                "println does not allow you to configure " +
                 "the output stream. Use a logger instead. [ForbiddenMethodCall]",
         )
     }
 }
 
-internal fun expectedTestWarnings(vararg files: File, compilerErrors: Int? = null): Iterable<String> {
-    val compilerErrorWarnings = if (compilerErrors != null) {
-        listOf(
-            "There were $compilerErrors compiler errors found during analysis. This affects accuracy of reporting.",
-            "Run detekt CLI with --debug or set `detekt { debug = true }` in Gradle to see the error messages.",
-        )
-    } else {
-        emptyList()
-    }
+internal fun expectedTestWarnings(vararg files: File): Iterable<String> = expectedWarnings(*files)
 
-    return compilerErrorWarnings + files.flatMap { file ->
-        val path = file.absolutePath
-        listOf(
-            "$path:9:9: Variable 'x' could be val. [VarCouldBeVal]",
-            "$path:9:9: Variable x is declared as `var` with a mutable type kotlin.collections.MutableSet. " +
-                "Consider using `val` or an immutable collection or value type [DoubleMutabilityForCollection]",
-            "$path:10:9: The method `kotlin.io.println` has been forbidden: println does not allow you to configure " +
-                "the output stream. Use a logger instead. [ForbiddenMethodCall]",
-        )
-    }
+internal fun expectedExternalDependencyWarning(file: File): String {
+    val call = file.locationOf("CoroutineScope(EmptyCoroutineContext)")
+    return "${file.absolutePath}:${call.line}:${call.column}: " +
+        "The method `kotlinx.coroutines.CoroutineScope` has been forbidden: " +
+        "Use an application-owned coroutine scope instead. [ForbiddenMethodCall]"
 }
+
+private fun File.locationOf(text: String): SourceLocation = useLines { lines ->
+    lines.withIndex()
+        .firstNotNullOfOrNull { (index, line) ->
+            line.indexOf(text).takeIf { it >= 0 }?.let { column -> SourceLocation(index + 1, column + 1) }
+        }
+        ?: error("$text not found in $this")
+}
+
+private data class SourceLocation(val line: Int, val column: Int)
 
 private fun BuildResult.outputLines(): Sequence<String> =
     output.lineSequence().map { line -> line.replace(ansiRegex, "").trimEnd('\r') }

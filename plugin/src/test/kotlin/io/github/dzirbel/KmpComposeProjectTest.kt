@@ -1,12 +1,10 @@
 package io.github.dzirbel
 
-import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class KmpComposeProjectTest {
+class KmpComposeProjectTest : SampleProjectTest("kmp-compose") {
 
-    private val projectDir = File("src/test/resources/kmp-compose")
     private val composeFile = projectDir.resolve("src/commonMain/kotlin/io/github/dzirbel/SampleCompose.kt")
 
     @Test

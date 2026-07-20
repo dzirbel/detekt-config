@@ -1,3 +1,5 @@
+import io.github.dzirbel.DetektConfigExtension
+
 plugins {
     kotlin("multiplatform")
     id("io.github.dzirbel.detekt-config")
@@ -14,10 +16,15 @@ kotlin {
     }
 
     sourceSets {
-        val commonMain = getByName("commonMain")
+        val commonMain = getByName("commonMain") {
+            dependencies {
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
+            }
+        }
         val commonTest = getByName("commonTest") {
             dependencies {
                 implementation(kotlin("test"))
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
             }
         }
         val sharedMain = create("sharedMain") {
@@ -39,4 +46,14 @@ kotlin {
             dependsOn(sharedTest)
         }
     }
+}
+
+detektConfig {
+    forbiddenMethodCalls.addAll(DetektConfigExtension.DEFAULT_FORBIDDEN_METHOD_CALLS)
+    forbiddenMethodCalls.add(
+        DetektConfigExtension.ForbiddenMethodCall(
+            value = "kotlinx.coroutines.CoroutineScope",
+            reason = "Use an application-owned coroutine scope instead.",
+        ),
+    )
 }

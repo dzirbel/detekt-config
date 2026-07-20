@@ -1,11 +1,9 @@
 package io.github.dzirbel
 
-import java.io.File
 import kotlin.test.Test
 
-class JsProjectTest {
+class JsProjectTest : SampleProjectTest("js") {
 
-    private val projectDir = File("src/test/resources/js")
     private val sampleFile = projectDir.resolve("src/commonMain/kotlin/io/github/dzirbel/Sample.kt")
     private val commonTestFile = projectDir.resolve("src/commonTest/kotlin/io/github/dzirbel/SampleCommonTest.kt")
     private val jsTestFile = projectDir.resolve("src/jsTest/kotlin/io/github/dzirbel/SampleJsTest.kt")
@@ -13,6 +11,14 @@ class JsProjectTest {
     @Test
     fun `compilation succeeds`() {
         projectDir.gradle("assemble").build()
+    }
+
+    @Test
+    fun `tests succeed`() {
+        val result = projectDir.gradle("jsNodeTest").build()
+
+        assertTaskPassed(result, ":js:jsNodeTest")
+        assertTestsExecuted(projectDir, "jsNodeTest")
     }
 
     @Test
@@ -26,8 +32,11 @@ class JsProjectTest {
 
         val mainOutput = assertTaskFailed(result, ":js:detektJsMain")
         val testOutput = assertTaskFailed(result, ":js:detektJsTest")
-        assertSameContents(expectedWarnings(sampleFile), mainOutput)
-        assertSameContents(expectedTestWarnings(commonTestFile, jsTestFile, compilerErrors = 8), testOutput)
+        assertSameContents(expectedWarnings(sampleFile) + expectedExternalDependencyWarning(sampleFile), mainOutput)
+        assertSameContents(
+            expectedTestWarnings(commonTestFile, jsTestFile) + expectedExternalDependencyWarning(jsTestFile),
+            testOutput,
+        )
     }
 
     @Test
@@ -41,7 +50,10 @@ class JsProjectTest {
 
         val mainOutput = assertTaskFailed(result, ":js:detektJsMain")
         val testOutput = assertTaskFailed(result, ":js:detektJsTest")
-        assertSameContents(expectedWarnings(sampleFile), mainOutput)
-        assertSameContents(expectedTestWarnings(commonTestFile, jsTestFile, compilerErrors = 8), testOutput)
+        assertSameContents(expectedWarnings(sampleFile) + expectedExternalDependencyWarning(sampleFile), mainOutput)
+        assertSameContents(
+            expectedTestWarnings(commonTestFile, jsTestFile) + expectedExternalDependencyWarning(jsTestFile),
+            testOutput,
+        )
     }
 }

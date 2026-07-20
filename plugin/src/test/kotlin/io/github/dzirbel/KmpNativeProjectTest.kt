@@ -3,9 +3,7 @@ package io.github.dzirbel
 import java.io.File
 import kotlin.test.Test
 
-class KmpNativeProjectTest {
-
-    private val projectDir = File("src/test/resources/kmp-native")
+class KmpNativeProjectTest : SampleProjectTest("kmp-native") {
 
     @Test
     fun `compilation succeeds`() {
@@ -16,7 +14,12 @@ class KmpNativeProjectTest {
     fun `tests succeed`() {
         val targets = nativeTargets()
         for (target in targets) {
-            projectDir.gradle(target.testTaskName).build()
+            val result = projectDir.gradle(target.testTaskName).build()
+
+            assertTaskPassed(result, target.testTaskName)
+            if (!target.testTaskName.endsWith("TestBinaries")) {
+                assertTestsExecuted(projectDir, target.testTaskName.substringAfterLast(':'))
+            }
         }
     }
 
@@ -34,8 +37,16 @@ class KmpNativeProjectTest {
 
             val mainOutput = assertTaskFailed(result, target.detektTaskName)
             val testOutput = assertTaskFailed(result, target.detektTestTaskName)
-            assertSameContents(expectedWarnings(*target.mainFiles.toTypedArray()), mainOutput)
-            assertSameContents(expectedTestWarnings(*target.testFiles.toTypedArray()), testOutput.drop(2))
+            assertSameContents(
+                expectedWarnings(*target.mainFiles.toTypedArray()) +
+                    expectedExternalDependencyWarning(target.mainFiles.first()),
+                mainOutput,
+            )
+            assertSameContents(
+                expectedTestWarnings(*target.testFiles.toTypedArray()) +
+                    expectedExternalDependencyWarning(target.testFiles.first()),
+                testOutput,
+            )
         }
     }
 
@@ -53,8 +64,16 @@ class KmpNativeProjectTest {
 
             val mainOutput = assertTaskFailed(result, target.detektTaskName)
             val testOutput = assertTaskFailed(result, target.detektTestTaskName)
-            assertSameContents(expectedWarnings(*target.mainFiles.toTypedArray()), mainOutput)
-            assertSameContents(expectedTestWarnings(*target.testFiles.toTypedArray()), testOutput.drop(2))
+            assertSameContents(
+                expectedWarnings(*target.mainFiles.toTypedArray()) +
+                    expectedExternalDependencyWarning(target.mainFiles.first()),
+                mainOutput,
+            )
+            assertSameContents(
+                expectedTestWarnings(*target.testFiles.toTypedArray()) +
+                    expectedExternalDependencyWarning(target.testFiles.first()),
+                testOutput,
+            )
         }
     }
 
