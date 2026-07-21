@@ -7,29 +7,28 @@ match the compilation being analyzed.
 ## Current task wiring
 
 The upstream detekt Gradle plugin creates the plain `detekt` task, source-set tasks, and type-resolved tasks for JVM,
-Android, and JVM multiplatform compilations. This plugin additionally observes Kotlin compilations and makes its root
-`detekt` task depend on one task per non-common compilation:
+Android, and JVM multiplatform compilations. This plugin uses one internal adapter to map each Kotlin compilation to one
+type-resolved detekt task and makes the root `detekt` task depend on every mapped task:
 
-- JVM tasks use the compilation's Kotlin source-set directories, output, compile libraries, and friend paths.
+- JVM tasks reuse the upstream type-resolved task and use the compilation's Kotlin source-set directories, output,
+  compile libraries, and friend paths.
 - JS and native tasks use the compilation's Kotlin source-set directories, detekt's CLI classpath, associated
-  compilation outputs as friend paths, a sibling JVM target's associated output when one exists, and a lenient
-  JVM-compatible view of declared dependencies.
-- Tasks inherit the compilation's language/API versions, opt-ins, and free compiler arguments. JVM tasks additionally
-  inherit the JVM target and no-JDK mode.
+  compilation outputs as friend paths, transitive outputs from corresponding sibling JVM compilations when they exist,
+  and a lenient JVM-compatible view of declared dependencies.
+- Tasks inherit the compilation's language/API versions, explicit API mode, opt-ins, and free compiler arguments. JVM
+  tasks additionally inherit the JVM target and no-JDK mode.
 - Multiplatform tasks enable detekt's multiplatform analysis mode.
 - Every configured analysis task depends on its corresponding Kotlin compile task.
 
-The custom task names use target-then-compilation order, such as `detektJvmMain` and `detektJsTest`. Upstream detekt can
-also register source-set tasks and JVM tasks with different names, so a multiplatform project currently exposes more
-detekt tasks than the root lifecycle task runs.
+Task names use the upstream compilation-then-target order: `detektMain` for a standalone JVM main compilation,
+`detektMainJvm` for KMP JVM main, and `detektTestJs` for KMP JS test. Upstream source-set and baseline tasks remain
+available as distinct entry points, but the root lifecycle runs only the compilation tasks. Whenever compilation tasks
+exist, the root `detekt` task has no sources of its own and therefore does not repeat syntax-only analysis.
 
 ## Known limitations
 
 - Detekt's analysis engine cannot consume target-only `.klib` dependencies. JS and native analysis resolves dependencies
   that publish JVM variants and skips target-only artifacts; see [the support contract](support-contract.md).
-- The root `detekt` task remains an upstream `Detekt` analysis task rather than a pure lifecycle task. In a standard JVM
-  layout it can analyze the default main and test directories again, without the compilation classpath, after the
-  type-resolved tasks pass.
 - Android behavior comes from the upstream detekt integration and does not have repository-owned TestKit coverage.
 
 When findings differ between otherwise equivalent targets, inspect the analysis task's sources and classpath, enable

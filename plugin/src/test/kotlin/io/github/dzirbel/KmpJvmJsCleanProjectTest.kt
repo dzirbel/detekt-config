@@ -1,6 +1,7 @@
 package io.github.dzirbel
 
 import kotlin.test.Test
+import kotlin.test.assertContains
 
 class KmpJvmJsCleanProjectTest : SampleProjectTest("kmp-jvm-js-clean") {
 
@@ -33,10 +34,15 @@ class KmpJvmJsCleanProjectTest : SampleProjectTest("kmp-jvm-js-clean") {
         assertTaskPassed(result, ":kmp-jvm-js-clean:compileKotlinJs")
         assertTaskPassed(result, ":kmp-jvm-js-clean:compileTestKotlinJvm")
         assertTaskPassed(result, ":kmp-jvm-js-clean:compileTestKotlinJs")
-        assertDetektTaskPassed(result, ":kmp-jvm-js-clean:detektJvmMain")
-        assertDetektTaskPassed(result, ":kmp-jvm-js-clean:detektJsMain")
-        assertDetektTaskPassed(result, ":kmp-jvm-js-clean:detektJvmTest")
-        assertDetektTaskPassed(result, ":kmp-jvm-js-clean:detektJsTest")
+        assertTaskPassed(result, ":kmp-jvm-js-clean:compileIntegrationTestKotlinJvm")
+        assertTaskPassed(result, ":kmp-jvm-js-clean:compileIntegrationTestKotlinJs")
+        assertDetektTaskPassed(result, ":kmp-jvm-js-clean:detektMainJvm")
+        assertDetektTaskPassed(result, ":kmp-jvm-js-clean:detektMainJs")
+        assertDetektTaskPassed(result, ":kmp-jvm-js-clean:detektTestJvm")
+        assertDetektTaskPassed(result, ":kmp-jvm-js-clean:detektTestJs")
+        assertDetektTaskPassed(result, ":kmp-jvm-js-clean:detektIntegrationTestJvm")
+        assertDetektTaskPassed(result, ":kmp-jvm-js-clean:detektIntegrationTestJs")
+        assertTaskNoSource(result, ":kmp-jvm-js-clean:detekt")
         assertTaskPassed(result, ":kmp-jvm-js-clean:check")
     }
 
@@ -48,9 +54,26 @@ class KmpJvmJsCleanProjectTest : SampleProjectTest("kmp-jvm-js-clean") {
         assertTaskPassed(result, ":kmp-jvm-js-clean:compileKotlinJs")
         assertTaskPassed(result, ":kmp-jvm-js-clean:compileTestKotlinJvm")
         assertTaskPassed(result, ":kmp-jvm-js-clean:compileTestKotlinJs")
-        assertDetektTaskPassed(result, ":kmp-jvm-js-clean:detektJvmMain")
-        assertDetektTaskPassed(result, ":kmp-jvm-js-clean:detektJsMain")
-        assertDetektTaskPassed(result, ":kmp-jvm-js-clean:detektJvmTest")
-        assertDetektTaskPassed(result, ":kmp-jvm-js-clean:detektJsTest")
+        assertTaskPassed(result, ":kmp-jvm-js-clean:compileIntegrationTestKotlinJvm")
+        assertTaskPassed(result, ":kmp-jvm-js-clean:compileIntegrationTestKotlinJs")
+        assertDetektTaskPassed(result, ":kmp-jvm-js-clean:detektMainJvm")
+        assertDetektTaskPassed(result, ":kmp-jvm-js-clean:detektMainJs")
+        assertDetektTaskPassed(result, ":kmp-jvm-js-clean:detektTestJvm")
+        assertDetektTaskPassed(result, ":kmp-jvm-js-clean:detektTestJs")
+        assertDetektTaskPassed(result, ":kmp-jvm-js-clean:detektIntegrationTestJvm")
+        assertDetektTaskPassed(result, ":kmp-jvm-js-clean:detektIntegrationTestJs")
+        assertTaskNoSource(result, ":kmp-jvm-js-clean:detekt")
+    }
+
+    @Test
+    fun `detekt reuses the configuration cache`() {
+        val arguments = arrayOf("detekt", "--configuration-cache", "--configuration-cache-problems=fail")
+
+        val firstResult = projectDir.gradle(*arguments).build()
+        assertContains(firstResult.output, "Configuration cache entry stored.")
+
+        val secondResult = projectDir.gradle(*arguments).build()
+        assertContains(secondResult.output, "Reusing configuration cache.")
+        assertTaskNoSource(secondResult, ":kmp-jvm-js-clean:detekt")
     }
 }

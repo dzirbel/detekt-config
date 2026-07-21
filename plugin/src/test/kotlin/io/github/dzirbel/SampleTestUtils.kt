@@ -55,10 +55,10 @@ private fun copyFixtureResources(sourceRoot: File, destinationRoot: File) {
         }
 }
 
-internal fun File.gradle(task: String): GradleRunner {
+internal fun File.gradle(vararg arguments: String): GradleRunner {
     return GradleRunner.create()
         .withProjectDir(this)
-        .withArguments(task, "--continue")
+        .withArguments(arguments.toList() + "--continue")
 }
 
 internal fun assertTaskNotRun(result: BuildResult, path: String) {

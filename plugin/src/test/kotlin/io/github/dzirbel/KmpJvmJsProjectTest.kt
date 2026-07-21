@@ -45,16 +45,16 @@ class KmpJvmJsProjectTest : SampleProjectTest("kmp-jvm-js") {
         assertTaskNotRun(result, ":kmp-jvm-js:check")
         assertFailedTasks(
             result,
-            ":kmp-jvm-js:detektJvmMain",
-            ":kmp-jvm-js:detektJsMain",
-            ":kmp-jvm-js:detektJvmTest",
-            ":kmp-jvm-js:detektJsTest",
+            ":kmp-jvm-js:detektMainJvm",
+            ":kmp-jvm-js:detektMainJs",
+            ":kmp-jvm-js:detektTestJvm",
+            ":kmp-jvm-js:detektTestJs",
         )
 
-        val jvmOutput = assertTaskFailed(result, ":kmp-jvm-js:detektJvmMain")
-        val jsOutput = assertTaskFailed(result, ":kmp-jvm-js:detektJsMain")
-        val jvmTestOutput = assertTaskFailed(result, ":kmp-jvm-js:detektJvmTest")
-        val jsTestOutput = assertTaskFailed(result, ":kmp-jvm-js:detektJsTest")
+        val jvmOutput = assertTaskFailed(result, ":kmp-jvm-js:detektMainJvm")
+        val jsOutput = assertTaskFailed(result, ":kmp-jvm-js:detektMainJs")
+        val jvmTestOutput = assertTaskFailed(result, ":kmp-jvm-js:detektTestJvm")
+        val jsTestOutput = assertTaskFailed(result, ":kmp-jvm-js:detektTestJs")
         assertSameContents(expectedWarnings(commonFile, sharedFile, jvmFile), jvmOutput)
         assertSameContents(
             expectedWarnings(commonFile, sharedFile, jsFile) + expectedExternalDependencyWarning(jsFile),
@@ -79,16 +79,16 @@ class KmpJvmJsProjectTest : SampleProjectTest("kmp-jvm-js") {
         assertTaskNotRun(result, ":kmp-jvm-js:detekt")
         assertFailedTasks(
             result,
-            ":kmp-jvm-js:detektJvmMain",
-            ":kmp-jvm-js:detektJsMain",
-            ":kmp-jvm-js:detektJvmTest",
-            ":kmp-jvm-js:detektJsTest",
+            ":kmp-jvm-js:detektMainJvm",
+            ":kmp-jvm-js:detektMainJs",
+            ":kmp-jvm-js:detektTestJvm",
+            ":kmp-jvm-js:detektTestJs",
         )
 
-        val jvmOutput = assertTaskFailed(result, ":kmp-jvm-js:detektJvmMain")
-        val jsOutput = assertTaskFailed(result, ":kmp-jvm-js:detektJsMain")
-        val jvmTestOutput = assertTaskFailed(result, ":kmp-jvm-js:detektJvmTest")
-        val jsTestOutput = assertTaskFailed(result, ":kmp-jvm-js:detektJsTest")
+        val jvmOutput = assertTaskFailed(result, ":kmp-jvm-js:detektMainJvm")
+        val jsOutput = assertTaskFailed(result, ":kmp-jvm-js:detektMainJs")
+        val jvmTestOutput = assertTaskFailed(result, ":kmp-jvm-js:detektTestJvm")
+        val jsTestOutput = assertTaskFailed(result, ":kmp-jvm-js:detektTestJs")
         assertSameContents(expectedWarnings(commonFile, sharedFile, jvmFile), jvmOutput)
         assertSameContents(
             expectedWarnings(commonFile, sharedFile, jsFile) + expectedExternalDependencyWarning(jsFile),

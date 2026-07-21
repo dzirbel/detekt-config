@@ -1,10 +1,12 @@
 package io.github.dzirbel
 
+import dev.detekt.gradle.Detekt
 import org.gradle.api.Task
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.configure
 import org.gradle.testfixtures.ProjectBuilder
+import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import kotlin.test.Test
 import kotlin.test.assertContains
@@ -62,7 +64,7 @@ class TasksTest {
         project.apply(plugin = "io.github.dzirbel.detekt-config")
 
         assertContains(project.tasks.check.dependencyPaths(), ":detekt")
-        assertSameContents(listOf(":detektJvmMain", ":detektJvmTest"), project.tasks.detekt.dependencyPaths())
+        assertSameContents(listOf(":detektMainJvm", ":detektTestJvm"), project.tasks.detekt.dependencyPaths())
     }
 
     @Test
@@ -75,7 +77,7 @@ class TasksTest {
         project.apply(plugin = "io.github.dzirbel.detekt-config")
 
         assertContains(project.tasks.check.dependencyPaths(), ":detekt")
-        assertSameContents(listOf(":detektJsMain", ":detektJsTest"), project.tasks.detekt.dependencyPaths())
+        assertSameContents(listOf(":detektMainJs", ":detektTestJs"), project.tasks.detekt.dependencyPaths())
     }
 
     @Test
@@ -88,7 +90,7 @@ class TasksTest {
         project.apply(plugin = "io.github.dzirbel.detekt-config")
 
         assertContains(project.tasks.check.dependencyPaths(), ":detekt")
-        assertSameContents(listOf(":detektMingwX64Main", ":detektMingwX64Test"), project.tasks.detekt.dependencyPaths())
+        assertSameContents(listOf(":detektMainMingwX64", ":detektTestMingwX64"), project.tasks.detekt.dependencyPaths())
     }
 
     @Test
@@ -105,12 +107,12 @@ class TasksTest {
         assertContains(project.tasks.check.dependencyPaths(), ":detekt")
         assertSameContents(
             listOf(
-                ":detektIosArm64Main",
-                ":detektIosArm64Test",
-                ":detektIosSimulatorArm64Main",
-                ":detektIosSimulatorArm64Test",
-                ":detektIosX64Main",
-                ":detektIosX64Test",
+                ":detektMainIosArm64",
+                ":detektTestIosArm64",
+                ":detektMainIosSimulatorArm64",
+                ":detektTestIosSimulatorArm64",
+                ":detektMainIosX64",
+                ":detektTestIosX64",
             ),
             project.tasks.detekt.dependencyPaths(),
         )
@@ -127,7 +129,7 @@ class TasksTest {
 
         assertContains(project.tasks.check.dependencyPaths(), ":detekt")
         assertSameContents(
-            listOf(":detektLinuxArm64Main", ":detektLinuxArm64Test"),
+            listOf(":detektMainLinuxArm64", ":detektTestLinuxArm64"),
             project.tasks.detekt.dependencyPaths(),
         )
     }
@@ -143,7 +145,7 @@ class TasksTest {
 
         assertContains(project.tasks.check.dependencyPaths(), ":detekt")
         assertSameContents(
-            listOf(":detektLinuxX64Main", ":detektLinuxX64Test"),
+            listOf(":detektMainLinuxX64", ":detektTestLinuxX64"),
             project.tasks.detekt.dependencyPaths(),
         )
     }
@@ -153,16 +155,37 @@ class TasksTest {
         val project = project()
         project.apply(plugin = "org.jetbrains.kotlin.multiplatform")
         project.extensions.configure<KotlinMultiplatformExtension> {
-            jvm()
-            js()
+            jvm().compilations.create("integrationTest")
+            js().compilations.create("integrationTest")
         }
         project.apply(plugin = "io.github.dzirbel.detekt-config")
 
         assertContains(project.tasks.check.dependencyPaths(), ":detekt")
         assertSameContents(
-            listOf(":detektJvmMain", ":detektJsMain", ":detektJvmTest", ":detektJsTest"),
+            listOf(
+                ":detektMainJvm",
+                ":detektMainJs",
+                ":detektTestJvm",
+                ":detektTestJs",
+                ":detektIntegrationTestJvm",
+                ":detektIntegrationTestJs",
+            ),
             project.tasks.detekt.dependencyPaths(),
         )
+    }
+
+    @Test
+    fun `plugin-owned multiplatform tasks inherit explicit API mode`() {
+        val project = project()
+        project.apply(plugin = "org.jetbrains.kotlin.multiplatform")
+        project.extensions.configure<KotlinMultiplatformExtension> {
+            explicitApi = ExplicitApiMode.Strict
+            js()
+        }
+        project.apply(plugin = "io.github.dzirbel.detekt-config")
+
+        val detektMainJs = project.tasks.getByPath(":detektMainJs") as Detekt
+        assertContains(detektMainJs.freeCompilerArgs.get(), "-Xexplicit-api=strict")
     }
 
     private val TaskContainer.check: Task get() = getByPath(":check")

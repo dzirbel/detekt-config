@@ -30,6 +30,11 @@ left by an earlier test or local invocation.
 
 ## 2. Replace the parallel task topology
 
+This topology is implemented by the internal compilation adapter. Task names use compilation-then-target order (for
+example, `detektMainJvm` and `detektTestJs`), allowing upstream JVM tasks to be reused while the plugin registers only
+missing JS/native tasks. The root `detekt` task is source-empty and aggregates every compilation task exactly once.
+Functional coverage includes custom JVM/JS KMP compilations and a twice-run, warning-rejecting configuration-cache test.
+
 Introduce one internal compilation-to-detekt adapter rather than independently registering a second family of tasks.
 Reuse and configure upstream type-resolved tasks for JVM and Android when they exist; register tasks only for unsupported
 JS/native compilations. Keep one documented naming order and one aggregation path. Make the root `detekt` entry point a

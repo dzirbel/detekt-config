@@ -36,6 +36,6 @@ class JvmCleanProjectTest : SampleProjectTest("jvm-clean") {
         assertTaskPassed(result, ":jvm-clean:compileTestKotlin")
         assertDetektTaskPassed(result, ":jvm-clean:detektMain")
         assertDetektTaskPassed(result, ":jvm-clean:detektTest")
-        assertDetektTaskPassed(result, ":jvm-clean:detekt")
+        assertTaskNoSource(result, ":jvm-clean:detekt")
     }
 }

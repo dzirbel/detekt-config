@@ -8,8 +8,8 @@ repositories {
 }
 
 kotlin {
-    jvm()
-    js {
+    val jvmTarget = jvm()
+    val jsTarget = js {
         nodejs()
     }
 
@@ -38,5 +38,15 @@ kotlin {
         jsTest {
             dependsOn(sharedTest)
         }
+    }
+
+    val sharedTestSourceSet = sourceSets.getByName("sharedTest")
+    jvmTarget.compilations.create("integrationTest") {
+        associateWith(jvmTarget.compilations.getByName("test"))
+        defaultSourceSet.dependsOn(sharedTestSourceSet)
+    }
+    jsTarget.compilations.create("integrationTest") {
+        associateWith(jsTarget.compilations.getByName("test"))
+        defaultSourceSet.dependsOn(sharedTestSourceSet)
     }
 }

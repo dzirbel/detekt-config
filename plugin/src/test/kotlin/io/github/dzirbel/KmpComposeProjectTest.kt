@@ -19,9 +19,9 @@ class KmpComposeProjectTest : SampleProjectTest("kmp-compose") {
         assertTaskPassed(result, ":kmp-compose:compileKotlinJvm")
         assertTaskNoSource(result, ":kmp-compose:compileTestKotlinJvm")
         assertTaskNotRun(result, ":kmp-compose:check")
-        assertFailedTasks(result, ":kmp-compose:detektJvmMain")
-        assertTaskNoSource(result, ":kmp-compose:detektJvmTest")
-        assertComposeOutput(assertTaskFailed(result, ":kmp-compose:detektJvmMain"))
+        assertFailedTasks(result, ":kmp-compose:detektMainJvm")
+        assertTaskNoSource(result, ":kmp-compose:detektTestJvm")
+        assertComposeOutput(assertTaskFailed(result, ":kmp-compose:detektMainJvm"))
     }
 
     @Test
@@ -30,9 +30,9 @@ class KmpComposeProjectTest : SampleProjectTest("kmp-compose") {
 
         assertTaskPassed(result, ":kmp-compose:compileKotlinJvm")
         assertTaskNotRun(result, ":kmp-compose:detekt")
-        assertFailedTasks(result, ":kmp-compose:detektJvmMain")
-        assertTaskNoSource(result, ":kmp-compose:detektJvmTest")
-        assertComposeOutput(assertTaskFailed(result, ":kmp-compose:detektJvmMain"))
+        assertFailedTasks(result, ":kmp-compose:detektMainJvm")
+        assertTaskNoSource(result, ":kmp-compose:detektTestJvm")
+        assertComposeOutput(assertTaskFailed(result, ":kmp-compose:detektMainJvm"))
     }
 
     private fun assertComposeOutput(output: List<String>) {

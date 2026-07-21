@@ -19,7 +19,9 @@ Structure:
 
 ## Build, Test, and Development Commands
 Always run Gradle commands to verify code changes. Make sure the build both passes and the expected tasks were run.
-Use the Gradle wrapper:
+Use the Gradle wrapper directly. Do not override `GRADLE_USER_HOME` as a sandbox workaround; direct `./gradlew`
+invocations are the repository-approved command form and should use the normal user-level Gradle cache.
+
 - `./gradlew build`: compile, test, and run verification tasks.
 - `./gradlew check`: aggregate verification tasks without full build packaging.
 - `./gradlew test`: run all tests.

@@ -28,10 +28,10 @@ class JsProjectTest : SampleProjectTest("js") {
         assertTaskPassed(result, ":js:compileKotlinJs")
         assertTaskPassed(result, ":js:compileTestKotlinJs")
         assertTaskNotRun(result, ":js:check")
-        assertFailedTasks(result, ":js:detektJsMain", ":js:detektJsTest")
+        assertFailedTasks(result, ":js:detektMainJs", ":js:detektTestJs")
 
-        val mainOutput = assertTaskFailed(result, ":js:detektJsMain")
-        val testOutput = assertTaskFailed(result, ":js:detektJsTest")
+        val mainOutput = assertTaskFailed(result, ":js:detektMainJs")
+        val testOutput = assertTaskFailed(result, ":js:detektTestJs")
         assertSameContents(expectedWarnings(sampleFile) + expectedExternalDependencyWarning(sampleFile), mainOutput)
         assertSameContents(
             expectedTestWarnings(commonTestFile, jsTestFile) + expectedExternalDependencyWarning(jsTestFile),
@@ -46,10 +46,10 @@ class JsProjectTest : SampleProjectTest("js") {
         assertTaskPassed(result, ":js:compileKotlinJs")
         assertTaskPassed(result, ":js:compileTestKotlinJs")
         assertTaskNotRun(result, ":js:detekt")
-        assertFailedTasks(result, ":js:detektJsMain", ":js:detektJsTest")
+        assertFailedTasks(result, ":js:detektMainJs", ":js:detektTestJs")
 
-        val mainOutput = assertTaskFailed(result, ":js:detektJsMain")
-        val testOutput = assertTaskFailed(result, ":js:detektJsTest")
+        val mainOutput = assertTaskFailed(result, ":js:detektMainJs")
+        val testOutput = assertTaskFailed(result, ":js:detektTestJs")
         assertSameContents(expectedWarnings(sampleFile) + expectedExternalDependencyWarning(sampleFile), mainOutput)
         assertSameContents(
             expectedTestWarnings(commonTestFile, jsTestFile) + expectedExternalDependencyWarning(jsTestFile),
