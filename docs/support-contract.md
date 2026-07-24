@@ -9,7 +9,7 @@ applicable contract checks; "provisional" means behavior is currently delegated 
 | KMP JVM | Yes | Yes | Yes | Compilation classpath and friend paths | Supported |
 | KMP JS | Yes | Yes | Yes | JVM-compatible dependency variants and sibling JVM project output | Supported subset |
 | KMP native | Yes | Yes | Not yet covered | JVM-compatible variants of declared multiplatform dependencies | Supported subset |
-| Android JVM | Variant-specific | Variant-specific | Variant-specific | Upstream detekt Android integration | Provisional |
+| Android JVM | Yes | Yes | Variant-specific | Upstream detekt Android compilation classpath | Supported for AGP 9.3 built-in Kotlin |
 | Standalone Kotlin/JS | No | No | No | The plugin was removed from current Kotlin releases | Unsupported |
 
 Every supported analysis task must:
@@ -34,4 +34,13 @@ Functional fixtures enforce the contract in isolated temporary builds. JVM cover
 sets, project output, and an external dependency. KMP JS and native fixtures exercise main and test compilations and use
 an external coroutine API in a type-resolved finding. The clean JVM/JS fixture adds custom `integrationTest`
 compilations, asserts that all six compilation tasks emit no compiler-error summary, and verifies configuration-cache
-reuse. Android fixtures remain deferred to the Android phase of the architecture plan.
+reuse. The Android application fixture covers debug/release production variants plus debug unit and instrumented tests,
+including project-output and external-dependency resolution. The Android library fixture covers Compose findings on
+debug/release variants. Together they exercise both Android-before-config and config-before-Android plugin application
+orders.
+
+For Android application and library projects, the root `detekt` task is a source-empty lifecycle entry point that
+depends on upstream detekt's `detektMain` and `detektTest` aggregators. Compose configuration is enabled when
+`org.jetbrains.compose` or `org.jetbrains.kotlin.plugin.compose` is applied, or when
+`android.buildFeatures.compose = true`. Applying only `com.android.application` or `com.android.library` does not enable
+Compose configuration.

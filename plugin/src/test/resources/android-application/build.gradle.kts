@@ -1,32 +1,31 @@
 import io.github.dzirbel.DetektConfigExtension
 
 plugins {
-    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.android.application)
     id("io.github.dzirbel.detekt-config")
 }
 
 repositories {
+    google()
     mavenCentral()
 }
 
-kotlin {
-    js {
-        nodejs()
-    }
+android {
+    namespace = "io.github.dzirbel.application"
+    compileSdk = 36
+    enableKotlin = true
 
-    sourceSets {
-        commonMain {
-            dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
-            }
-        }
-        commonTest {
-            dependencies {
-                implementation(kotlin("test"))
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
-            }
-        }
+    defaultConfig {
+        applicationId = "io.github.dzirbel.application"
+        minSdk = 23
+        targetSdk = 36
+        versionCode = 1
+        versionName = "1.0"
     }
+}
+
+dependencies {
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
 }
 
 detektConfig {

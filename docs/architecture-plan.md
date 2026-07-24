@@ -6,8 +6,8 @@ add functional coverage before changing the supported task graph.
 ## 1. Define and enforce the support contract
 
 The current contract and its enforced compatibility matrix are documented in
-[the type-resolution support contract](support-contract.md). Android remains provisional until phase 3 adds
-repository-owned fixtures; custom KMP topology coverage belongs to phase 2.
+[the type-resolution support contract](support-contract.md). Android application/library coverage belongs to phase 3;
+custom KMP topology coverage belongs to phase 2.
 
 Create a small compatibility matrix covering JVM, Android JVM, and KMP JVM/JS/native projects. If compatibility with the
 removed standalone Kotlin/JS plugin remains a goal, test it in a separately version-pinned legacy fixture rather than the
@@ -50,6 +50,15 @@ Acceptance criterion: a KMP JVM/JS fixture exposes and runs one type-resolved an
 root lifecycle, while upstream source-set or baseline tasks remain available only when they serve a distinct purpose.
 
 ## 3. Make Android and Compose behavior explicit
+
+This phase is implemented for AGP 9.3 projects using built-in Kotlin. Repository-owned application and library fixtures
+cover both plugin application orders, debug/release production variants, and debug unit/instrumented-test components.
+The root `detekt` lifecycle is source-empty and reuses upstream Android `detektMain` and `detektTest` aggregation rather
+than recreating AGP's variant model.
+
+Compose configuration and the Compose rules dependency are enabled only when the JetBrains or Kotlin Compose compiler
+plugin is present, or when an Android application/library explicitly enables `android.buildFeatures.compose`. Applying
+an Android plugin by itself no longer opts a project into Compose rules.
 
 Add minimal Android library and application TestKit fixtures, including one non-Compose project and one Compose project.
 Verify variant and nested-test task aggregation, source/classpath accuracy, and plugin application order.

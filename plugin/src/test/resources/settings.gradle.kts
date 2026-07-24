@@ -6,6 +6,11 @@ includeBuild("../../../..") {
 
 pluginManagement {
     includeBuild("../../../..")
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
 }
 
 dependencyResolutionManagement {
@@ -17,6 +22,8 @@ dependencyResolutionManagement {
 }
 
 include("js")
+include("android-application")
+include("android-compose-library")
 include("jvm")
 include("jvm-clean")
 include("jvm-custom")

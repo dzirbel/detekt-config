@@ -19,6 +19,8 @@ type-resolved detekt task and makes the root `detekt` task depend on every mappe
   tasks additionally inherit the JVM target and no-JDK mode.
 - Multiplatform tasks enable detekt's multiplatform analysis mode.
 - Every configured analysis task depends on its corresponding Kotlin compile task.
+- Android application/library projects reuse upstream variant tasks and the upstream `detektMain`/`detektTest`
+  aggregators. The root `detekt` task has no sources of its own and depends on both aggregators.
 
 Task names use the upstream compilation-then-target order: `detektMain` for a standalone JVM main compilation,
 `detektMainJvm` for KMP JVM main, and `detektTestJs` for KMP JS test. Upstream source-set and baseline tasks remain
@@ -29,7 +31,12 @@ exist, the root `detekt` task has no sources of its own and therefore does not r
 
 - Detekt's analysis engine cannot consume target-only `.klib` dependencies. JS and native analysis resolves dependencies
   that publish JVM variants and skips target-only artifacts; see [the support contract](support-contract.md).
-- Android behavior comes from the upstream detekt integration and does not have repository-owned TestKit coverage.
+- Repository-owned Android coverage currently targets AGP 9.3 with built-in Kotlin. The variant source/classpath wiring
+  itself remains delegated to detekt's Android integration.
+
+Compose rules are loaded only when a JetBrains/Kotlin Compose compiler plugin is present or an Android
+application/library explicitly enables `buildFeatures.compose`. Android plugin presence alone is not treated as Compose
+enablement.
 
 When findings differ between otherwise equivalent targets, inspect the analysis task's sources and classpath, enable
 detekt debug logging, and treat any reported compiler errors as an analysis correctness failure. The remaining fixes and

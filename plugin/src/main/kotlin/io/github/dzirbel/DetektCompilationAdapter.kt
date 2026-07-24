@@ -23,6 +23,13 @@ internal class DetektCompilationAdapter(private val project: Project) {
     private val detektRoot = project.tasks.named("detekt", Detekt::class.java)
 
     fun configure() {
+        project.pluginManager.withPlugin("com.android.base") {
+            detektRoot.configure {
+                dependsOn(project.tasks.matching { task -> task.name == "detektMain" || task.name == "detektTest" })
+                setSource(project.files())
+            }
+        }
+
         project.pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
             val kotlin = project.extensions.getByType<KotlinJvmProjectExtension>()
             kotlin.target.compilations.configureEach {
