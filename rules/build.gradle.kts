@@ -12,12 +12,7 @@ dependencies {
     compileOnly("dev.detekt:detekt-api:$detektVersion")
 
     testImplementation(kotlin("test"))
-    // detekt 2.0.0-alpha.5's Gradle metadata requests an unpublished detekt-api test-fixtures runtime variant.
-    // The rule tests only use detekt-test's public lint helpers, so replace that broken transitive edge with detekt-api.
-    testImplementation("dev.detekt:detekt-test:$detektVersion") {
-        exclude(group = "dev.detekt", module = "detekt-api")
-    }
-    testImplementation("dev.detekt:detekt-api:$detektVersion")
+    testImplementation("dev.detekt:detekt-test:$detektVersion")
     testImplementation("dev.detekt:detekt-test-assertj:$detektVersion")
     testImplementation(libs.assertj)
 }
