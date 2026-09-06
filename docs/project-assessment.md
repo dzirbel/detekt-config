@@ -110,6 +110,11 @@ unless there is a concrete release need to separate them.
 
 ### 4. Make configuration composition a public, cacheable boundary
 
+**Implemented after this assessment:** recovered the configuration-composition stash and completed stable cacheable
+output, ordered consumer overrides, and resource namespacing. The original assessment below records the motivation;
+see [the architecture milestone](architecture-plan.md#4-separate-static-configuration-from-generated-overrides) and
+[the public configuration contract](../README.md#additional-configuration) for the resulting behavior.
+
 **Priority: medium.** The escaping defect is fixed, but full-file template substitution still couples immutable rule
 policy to extension-owned data. The plugin replaces upstream's config collection with a generated resource; there is no
 documented project-override API or precedence contract. Generating a defaults file does not make that file an effective

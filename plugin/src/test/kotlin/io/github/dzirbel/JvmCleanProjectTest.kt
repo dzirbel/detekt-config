@@ -2,8 +2,40 @@ package io.github.dzirbel
 
 import kotlin.test.Test
 import kotlin.test.assertContains
+import kotlin.test.assertEquals
+import org.gradle.testkit.runner.TaskOutcome
 
 class JvmCleanProjectTest : SampleProjectTest("jvm-clean") {
+
+    @Test
+    fun `project overrides track edits and reuse configuration and build caches`() {
+        projectDir.resolve("build.gradle.kts").appendText(
+            "\ndetektConfig { config.from(\"project-detekt.yml\") }\n",
+        )
+        val config = projectDir.resolve("project-detekt.yml")
+        config.writeText("style:\n  MagicNumber:\n    active: false\n")
+        projectDir.resolve("src/main/kotlin/io/github/dzirbel/Sample.kt").appendText(
+            "\nfun magicNumber(value: Int): Int = value + 42\n",
+        )
+        val arguments = arrayOf("detekt", "--configuration-cache", "--configuration-cache-problems=fail", "--build-cache")
+        val first = projectDir.gradle(*arguments).build()
+        assertDetektTaskPassed(first, ":jvm-clean:detektMain")
+        val second = projectDir.gradle(*arguments).build()
+        assertContains(second.output, "Reusing configuration cache.")
+        assertEquals(TaskOutcome.UP_TO_DATE, second.task(":jvm-clean:generateDetektConfig")?.outcome)
+        projectDir.resolve("build/detekt/config.yml").delete()
+        val restored = projectDir.gradle(*arguments).build()
+        assertEquals(TaskOutcome.FROM_CACHE, restored.task(":jvm-clean:generateDetektConfig")?.outcome)
+        projectDir.resolve("build.gradle.kts").appendText(
+            "\ndetektConfig { forbiddenMethodCalls.set(emptyList()) }\n",
+        )
+        val extensionChanged = projectDir.gradle(*arguments).build()
+        assertEquals(TaskOutcome.SUCCESS, extensionChanged.task(":jvm-clean:generateDetektConfig")?.outcome)
+        config.writeText("style:\n  MagicNumber:\n    active: true\n")
+        val changed = projectDir.gradle(*arguments).buildAndFail()
+        assertEquals(TaskOutcome.SUCCESS, changed.task(":jvm-clean:generateDetektConfig")?.outcome)
+        assertContains(changed.output, "MagicNumber")
+    }
 
     @Test
     fun `compilation succeeds`() {

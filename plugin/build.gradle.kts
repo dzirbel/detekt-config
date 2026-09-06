@@ -14,7 +14,7 @@ dependencies {
 
     testImplementation(kotlin("test"))
     testImplementation(kotlin("gradle-plugin"))
-    testImplementation(libs.snakeyaml)
+    implementation("org.yaml:snakeyaml:${versions.getProperty("snakeyaml")}")
 }
 
 gradlePlugin {

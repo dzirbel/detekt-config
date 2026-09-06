@@ -1,0 +1,2 @@
+# Deliberate generic resource collision: the plugin must load its namespaced policy.
+unrelated: true

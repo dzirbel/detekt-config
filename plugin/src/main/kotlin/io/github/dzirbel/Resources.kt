@@ -17,7 +17,7 @@ internal fun readResource(name: String): String {
     }
 }
 
-private fun requireResourceStream(name: String) = checkNotNull(classLoader.getResourceAsStream(name)) {
+private fun requireResourceStream(name: String) = checkNotNull(classLoader.getResourceAsStream("io/github/dzirbel/detekt-config/$name")) {
     "resource $name could not be found"
 }
 

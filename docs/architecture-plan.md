@@ -71,12 +71,13 @@ orders and document the exact detection contract.
 
 ## 4. Separate static configuration from generated overrides
 
-Replace full-file string concatenation and placeholder substitution with a configuration assembly boundary that keeps
-the static base/Compose files immutable and generates only extension-owned values. First prove detekt's multi-file merge
-semantics; if nested maps cannot be safely overlaid, use a YAML writer rather than hand-built indentation.
+Implemented: immutable namespaced base/Compose resources, structured YAML assembly, and ordered project overrides via
+`detektConfig.config`. A cacheable `generateDetektConfig` task produces `build/detekt/config.yml`; analysis consumes its
+output with an inferred task dependency. Nested maps retain siblings, while later lists/scalars replace earlier values.
+See [the README](../README.md#additional-configuration) for precedence and the public API.
 
-Add tests that parse the final YAML, reject unresolved or duplicate placeholders, cover empty lists and quoting, and
-allow consumers to append a project-owned config file without copying this repository's base configuration.
+Parsed-YAML tests retain control-character and literal-placeholder regressions. Functional coverage verifies nested
+project overrides, configuration-cache reuse, build-cache restoration, and invalidation after a project-file edit.
 
 ## 5. Harden the public and release boundaries
 

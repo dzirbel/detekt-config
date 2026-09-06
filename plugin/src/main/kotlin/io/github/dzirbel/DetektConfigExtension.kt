@@ -1,6 +1,7 @@
 package io.github.dzirbel
 
 import org.gradle.api.Project
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.provider.ListProperty
 import org.gradle.kotlin.dsl.create
 
@@ -18,6 +19,9 @@ interface DetektConfigExtension {
      * configured per-project.
      */
     val forbiddenMethodCalls: ListProperty<ForbiddenMethodCall>
+
+    /** Additional YAML files, in order; later values override plugin defaults and earlier files. */
+    val config: ConfigurableFileCollection
 
     companion object {
         val DEFAULT_TEST_PATHS = listOf("**/test/**", "**/androidTest/**", "**/testFixtures/**", "**/*Test/**")

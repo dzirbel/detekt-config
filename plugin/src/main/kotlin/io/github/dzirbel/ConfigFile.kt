@@ -1,63 +1,107 @@
 package io.github.dzirbel
 
-import org.gradle.api.Project
-import org.gradle.api.provider.Provider
-import org.gradle.kotlin.dsl.getByType
+import org.yaml.snakeyaml.DumperOptions
+import org.yaml.snakeyaml.LoaderOptions
+import org.yaml.snakeyaml.Yaml
+import org.yaml.snakeyaml.constructor.SafeConstructor
+import java.io.File
 
-private const val testPathsPlaceholder = "<TEST_PATHS>"
-private const val forbiddenMethodCallsPlaceholder = "<FORBIDDEN_METHOD_CALLS>"
-private const val indentedForbiddenMethodCallsPlaceholder = "      $forbiddenMethodCallsPlaceholder"
-private val configPlaceholderRegex = Regex("$testPathsPlaceholder|$indentedForbiddenMethodCallsPlaceholder")
+private val testPathRules = linkedMapOf(
+    "complexity" to listOf("TooManyFunctions"),
+    "exceptions" to listOf(
+        "InstanceOfCheckForException",
+        "ThrowingExceptionsWithoutMessageOrCause",
+        "TooGenericExceptionCaught",
+        "TooGenericExceptionThrown",
+    ),
+    "performance" to listOf("CouldBeSequence", "SpreadOperator"),
+    "potential-bugs" to listOf("CastNullableToNonNullableType", "LateinitUsage"),
+    "style" to listOf("MagicNumber"),
+)
 
-internal fun Project.buildDetektConfig(): Provider<String> {
-    return providers.provider {
-        val extension = extensions.getByType<DetektConfigExtension>()
-        val testPaths = extension.testPaths.get()
-            .joinToString(separator = ", ", prefix = "[", postfix = "]") { it.toYamlQuotedString() }
-        val forbiddenMethodCalls = extension.forbiddenMethodCalls.get()
-            .takeIf { it.isNotEmpty() }
-            ?.joinToString(separator = "\n") { forbiddenMethodCall ->
-                buildString {
-                    val reason = forbiddenMethodCall.reason
-                    appendLine(if (reason == null) "      -" else "      - reason: ${reason.toYamlQuotedString()}")
-                    append("        value: ${forbiddenMethodCall.value.toYamlQuotedString()}")
-                }
+/**
+ * Assembles bundled, Compose, generated, and project-owned layers into one YAML document so detekt validates
+ * the effective configuration. Later layers take precedence while nested maps retain unspecified earlier values.
+ */
+internal fun buildDetektConfig(
+    testPaths: List<String>,
+    forbiddenMethodCalls: List<DetektConfigExtension.ForbiddenMethodCall>,
+    compose: Boolean,
+    files: Iterable<File>,
+): String {
+    val layers = buildList {
+        add(loadYaml("base.yml", readResource("base.yml")))
+        if (compose) add(loadYaml("compose.yml", readResource("compose.yml")))
+        add(buildExtensionOverrides(testPaths, forbiddenMethodCalls))
+        files.forEach { add(loadYaml(it)) }
+    }
+    val merged = layers.fold(linkedMapOf<String, Any>()) { config, layer ->
+        config.apply { mergeFrom(layer) }
+    }
+    return Yaml(DumperOptions().apply {
+        defaultFlowStyle = DumperOptions.FlowStyle.BLOCK
+        defaultScalarStyle = DumperOptions.ScalarStyle.DOUBLE_QUOTED
+        nonPrintableStyle = DumperOptions.NonPrintableStyle.ESCAPE
+        splitLines = false
+    }).dump(merged)
+}
+
+private fun buildExtensionOverrides(
+    testPaths: List<String>,
+    forbiddenMethodCalls: List<DetektConfigExtension.ForbiddenMethodCall>,
+): Map<String, Any> = buildMap {
+    testPathRules.forEach { (ruleSet, rules) ->
+        put(ruleSet, buildMap {
+            rules.forEach { rule -> put(rule, mapOf("excludes" to testPaths)) }
+            if (ruleSet == "style") {
+                put("ForbiddenMethodCall", mapOf("methods" to forbiddenMethodCalls.map { method ->
+                    buildMap {
+                        put("value", method.value)
+                        method.reason?.let { put("reason", it) }
+                    }
+                }))
             }
-            ?: "      []"
-
-        buildString {
-            appendLine(readResource("base.yml"))
-
-            if (hasCompose) {
-                appendLine(readResource("compose.yml"))
-            }
-        }
-            .replace(configPlaceholderRegex) { match ->
-                // Replace only template tokens, never placeholder-like text inside extension values.
-                when (match.value) {
-                    testPathsPlaceholder -> testPaths
-                    else -> forbiddenMethodCalls
-                }
-            }
+        })
     }
 }
 
-private fun String.toYamlQuotedString(): String {
-    if (none { it.requiresYamlEscape() }) return "'${replace("'", "''")}'"
+private fun loadYaml(file: File): Map<String, Any> = try {
+    loadYaml(file.path, file.readText())
+} catch (exception: Exception) {
+    throw IllegalArgumentException("Cannot load detekt configuration: $file", exception)
+}
 
-    // Single-quoted YAML folds line breaks and cannot represent control characters. Use escaped double quotes instead.
-    return buildString {
-        append('"')
-        for (character in this@toYamlQuotedString) {
-            when {
-                character == '"' || character == '\\' -> append('\\').append(character)
-                character.requiresYamlEscape() -> append("\\u").append(character.code.toString(16).padStart(4, '0'))
-                else -> append(character)
-            }
-        }
-        append('"')
+private fun loadYaml(name: String, contents: String): Map<String, Any> {
+    val loaded = Yaml(SafeConstructor(LoaderOptions().apply {
+        isAllowDuplicateKeys = false
+        allowRecursiveKeys = false
+    })).load<Any>(contents) ?: return emptyMap()
+    require(loaded is Map<*, *>) { "Detekt configuration must be a YAML map: $name" }
+
+    return loaded.entries.associateTo(linkedMapOf()) { (key, value) ->
+        require(key is String) { "Detekt configuration keys must be strings: $name" }
+        key to requireNotNull(value) { "Detekt configuration values must not be null: $name > $key" }
     }
 }
 
-private fun Char.requiresYamlEscape(): Boolean =
-    code < 0x20 || code in 0x7f..0x9f || this == '\u2028' || this == '\u2029'
+private fun MutableMap<String, Any>.mergeFrom(layer: Map<String, Any>) {
+    layer.forEach { (key, value) ->
+        val existing = this[key]
+        this[key] = if (existing is Map<*, *> && value is Map<*, *>) {
+            existing.toStringKeyedMutableMap().apply {
+                mergeFrom(value.toStringKeyedMap())
+            }
+        } else {
+            value
+        }
+    }
+}
+
+private fun Map<*, *>.toStringKeyedMutableMap(): MutableMap<String, Any> =
+    toStringKeyedMap().toMap(linkedMapOf())
+
+private fun Map<*, *>.toStringKeyedMap(): Map<String, Any> =
+    entries.associateTo(linkedMapOf()) { (key, value) ->
+        require(key is String) { "Detekt configuration keys must be strings" }
+        key to requireNotNull(value) { "Detekt configuration values must not be null: $key" }
+    }

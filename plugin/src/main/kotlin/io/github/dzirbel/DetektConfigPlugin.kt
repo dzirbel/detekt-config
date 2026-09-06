@@ -7,15 +7,33 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
+import org.gradle.kotlin.dsl.register
 
 class DetektConfigPlugin : Plugin<Project> {
     override fun apply(target: Project) {
-        target.createDetektConfigExtension()
+        val extension = target.createDetektConfigExtension()
+        val generateConfig = target.tasks.register<GenerateDetektConfig>("generateDetektConfig") {
+            group = "verification"
+            description = "Assembles the effective detekt configuration."
+            testPaths.set(extension.testPaths)
+            forbiddenMethods.set(extension.forbiddenMethodCalls.map { methods ->
+                methods.map { method ->
+                    buildMap {
+                        put("value", method.value)
+                        method.reason?.let { put("reason", it) }
+                    }
+                }
+            })
+            compose.convention(false)
+            configFiles.from(extension.config)
+            outputFile.convention(target.layout.buildDirectory.file("detekt/config.yml"))
+        }
+        target.withCompose { generateConfig.configure { compose.set(true) } }
 
         target.pluginManager.apply("dev.detekt")
 
         target.configure<DetektExtension> {
-            config.setFrom(target.buildDetektConfig().map { target.resources.text.fromString(it) })
+            config.setFrom(generateConfig.flatMap { it.outputFile })
             failOnSeverity.set(FailOnSeverity.Warning)
         }
 

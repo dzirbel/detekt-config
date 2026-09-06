@@ -30,7 +30,7 @@ class TasksTest {
         project.apply(plugin = "io.github.dzirbel.detekt-config")
 
         assertSameContents(
-            listOf(":detekt", ":detektBaseline", ":detektGenerateConfig"),
+            listOf(":detekt", ":detektBaseline", ":detektGenerateConfig", ":generateDetektConfig"),
             project.tasks.map { it.path },
         )
     }
@@ -44,7 +44,7 @@ class TasksTest {
         project.apply(plugin = "io.github.dzirbel.detekt-config")
 
         assertSameContents(listOf(":detekt", ":test"), project.tasks.check.dependencyPaths())
-        assertSameContents(listOf(":detektMain", ":detektTest"), project.tasks.detekt.dependencyPaths())
+        assertSameContents(listOf(":generateDetektConfig", ":detektMain", ":detektTest"), project.tasks.detekt.dependencyPaths())
     }
 
     @Test
@@ -54,7 +54,7 @@ class TasksTest {
         project.apply(plugin = "org.jetbrains.kotlin.jvm")
 
         assertSameContents(listOf(":detekt", ":test"), project.tasks.check.dependencyPaths())
-        assertSameContents(listOf(":detektMain", ":detektTest"), project.tasks.detekt.dependencyPaths())
+        assertSameContents(listOf(":generateDetektConfig", ":detektMain", ":detektTest"), project.tasks.detekt.dependencyPaths())
     }
 
     @Test
@@ -67,7 +67,7 @@ class TasksTest {
         project.apply(plugin = "io.github.dzirbel.detekt-config")
 
         assertContains(project.tasks.check.dependencyPaths(), ":detekt")
-        assertSameContents(listOf(":detektMainJvm", ":detektTestJvm"), project.tasks.detekt.dependencyPaths())
+        assertSameContents(listOf(":generateDetektConfig", ":detektMainJvm", ":detektTestJvm"), project.tasks.detekt.dependencyPaths())
     }
 
     @Test
@@ -80,7 +80,7 @@ class TasksTest {
         project.apply(plugin = "io.github.dzirbel.detekt-config")
 
         assertContains(project.tasks.check.dependencyPaths(), ":detekt")
-        assertSameContents(listOf(":detektMainJs", ":detektTestJs"), project.tasks.detekt.dependencyPaths())
+        assertSameContents(listOf(":generateDetektConfig", ":detektMainJs", ":detektTestJs"), project.tasks.detekt.dependencyPaths())
     }
 
     @Test
@@ -93,7 +93,7 @@ class TasksTest {
         project.apply(plugin = "io.github.dzirbel.detekt-config")
 
         assertContains(project.tasks.check.dependencyPaths(), ":detekt")
-        assertSameContents(listOf(":detektMainMingwX64", ":detektTestMingwX64"), project.tasks.detekt.dependencyPaths())
+        assertSameContents(listOf(":generateDetektConfig", ":detektMainMingwX64", ":detektTestMingwX64"), project.tasks.detekt.dependencyPaths())
     }
 
     @Test
@@ -110,6 +110,7 @@ class TasksTest {
         assertContains(project.tasks.check.dependencyPaths(), ":detekt")
         assertSameContents(
             listOf(
+                ":generateDetektConfig",
                 ":detektMainIosArm64",
                 ":detektTestIosArm64",
                 ":detektMainIosSimulatorArm64",
@@ -132,7 +133,7 @@ class TasksTest {
 
         assertContains(project.tasks.check.dependencyPaths(), ":detekt")
         assertSameContents(
-            listOf(":detektMainLinuxArm64", ":detektTestLinuxArm64"),
+            listOf(":generateDetektConfig", ":detektMainLinuxArm64", ":detektTestLinuxArm64"),
             project.tasks.detekt.dependencyPaths(),
         )
     }
@@ -148,7 +149,7 @@ class TasksTest {
 
         assertContains(project.tasks.check.dependencyPaths(), ":detekt")
         assertSameContents(
-            listOf(":detektMainLinuxX64", ":detektTestLinuxX64"),
+            listOf(":generateDetektConfig", ":detektMainLinuxX64", ":detektTestLinuxX64"),
             project.tasks.detekt.dependencyPaths(),
         )
     }
@@ -166,6 +167,7 @@ class TasksTest {
         assertContains(project.tasks.check.dependencyPaths(), ":detekt")
         assertSameContents(
             listOf(
+                ":generateDetektConfig",
                 ":detektMainJvm",
                 ":detektMainJs",
                 ":detektTestJvm",

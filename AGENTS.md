@@ -31,7 +31,7 @@ invocations are the repository-approved command form and should use the normal u
 ## Coding Style & Naming Conventions
 - Kotlin + Kotlin DSL (`*.kt`, `*.kts`), 4-space indentation, standard Kotlin formatting.
 - Packages use `io.github.dzirbel.*`; classes in PascalCase; tests named `*Test.kt`.
-- Centralized versions live in `plugin/src/main/resources/versions.properties` (update here first).
+- Centralized versions live in `plugin/src/main/resources/io/github/dzirbel/detekt-config/versions.properties` (update here first).
 
 ## Testing Guidelines
 - Frameworks: `kotlin.test`, `detekt-test`, and Gradle TestKit.
