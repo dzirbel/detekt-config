@@ -8,5 +8,6 @@ class SampleCommonTest {
     fun buildsCommon() {
         val result = buildCommon(" Ada ")
         assertEquals(SampleCommon("Ada"), result)
+        assertEquals(3, result.name.length)
     }
 }

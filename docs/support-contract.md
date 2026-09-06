@@ -15,6 +15,7 @@ applicable contract checks; "provisional" means behavior is currently delegated 
 Every supported analysis task must:
 
 - analyze the Kotlin source-set hierarchy belonging to one compilation;
+- respect source-set include/exclude filters for compilations handled by this plugin's adapter;
 - resolve project output and declared dependencies that are representable to detekt's JVM analysis engine;
 - inherit the compilation's language version, API version, opt-ins, free compiler arguments, and applicable friend
   paths;
@@ -44,3 +45,14 @@ depends on upstream detekt's `detektMain` and `detektTest` aggregators. Compose 
 `org.jetbrains.compose` or `org.jetbrains.kotlin.plugin.compose` is applied, or when
 `android.buildFeatures.compose = true`. Applying only `com.android.application` or `com.android.library` does not enable
 Compose configuration.
+
+The default rule-specific test exemptions include `test`, `androidTest`, `testFixtures`, and directories ending in
+`Test`, such as `commonTest`, `linuxX64Test`, and `jvmIntegrationTest`. These are glob patterns, configurable through
+`detektConfig.testPaths`; they exempt selected rules rather than skipping test analysis altogether.
+
+Plugin-created JS/native tasks honor `detekt.baseline`, including changes made after task realization. Upstream JVM and
+Android baseline selection is preserved. JS/native compilation-specific baseline generation is not implemented yet.
+
+`detektGenerateConfig` writes upstream's default configuration to the root project's `config/detekt/detekt.yml` by
+default. Its task-level `configFile` property can override that destination. Generating this file does not automatically
+replace the plugin's assembled analysis configuration.

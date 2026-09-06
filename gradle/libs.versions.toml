@@ -4,6 +4,7 @@ androidx-compose = "1.11.4"
 assertj = "3.27.7"
 compose = "1.11.1"
 kotlin = "2.4.10"
+snakeyaml = "2.4"
 
 [libraries]
 androidx-compose-runtime = { module = "androidx.compose.runtime:runtime", version.ref = "androidx-compose" }
@@ -11,6 +12,7 @@ androidx-compose-ui = { module = "androidx.compose.ui:ui", version.ref = "androi
 assertj = { module = "org.assertj:assertj-core", version.ref = "assertj" }
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose" }
 compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose" }
+snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

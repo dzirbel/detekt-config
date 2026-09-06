@@ -1,5 +1,7 @@
 # Architecture plan
 
+See the later [project assessment](project-assessment.md) for verified fixes and the current proposed priorities.
+
 This plan separates correctness gaps from structural improvements. Each phase should keep `./gradlew build` green and
 add functional coverage before changing the supported task graph.
 

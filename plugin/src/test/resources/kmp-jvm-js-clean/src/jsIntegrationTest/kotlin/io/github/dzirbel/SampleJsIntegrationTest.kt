@@ -1,3 +1,3 @@
 package io.github.dzirbel
 
-fun jsIntegrationTestSample(value: String) = value
+fun jsIntegrationTestSample(value: String) = value.take(3)

@@ -2,6 +2,7 @@ package io.github.dzirbel
 
 import kotlin.test.Test
 import kotlin.test.assertContains
+import kotlin.test.assertTrue
 
 class KmpJvmJsCleanProjectTest : SampleProjectTest("kmp-jvm-js-clean") {
 
@@ -75,5 +76,24 @@ class KmpJvmJsCleanProjectTest : SampleProjectTest("kmp-jvm-js-clean") {
         val secondResult = projectDir.gradle(*arguments).build()
         assertContains(secondResult.output, "Reusing configuration cache.")
         assertTaskNoSource(secondResult, ":kmp-jvm-js-clean:detekt")
+    }
+
+    @Test
+    fun `JS analysis honors a configured baseline for shared code`() {
+        projectDir.resolve("src/commonMain/kotlin/io/github/dzirbel/SampleCommon.kt").appendText(
+            "\nfun baselineSample() {\n    println(\"baselined finding\")\n}\n",
+        )
+        val baselineResult = projectDir.gradle("detektBaselineMainJvm").build()
+        assertTaskPassed(baselineResult, ":kmp-jvm-js-clean:detektBaselineMainJvm")
+        val baseline = projectDir.resolve("detekt-baseline-main.xml")
+        assertTrue(baseline.isFile)
+        assertContains(baseline.readText(), "ForbiddenMethodCall")
+        projectDir.resolve("build.gradle.kts").appendText(
+            "\ndetekt { baseline.set(layout.projectDirectory.file(\"detekt-baseline-main.xml\")) }\n",
+        )
+
+        val result = projectDir.gradle("detektMainJs").build()
+
+        assertDetektTaskPassed(result, ":kmp-jvm-js-clean:detektMainJs")
     }
 }

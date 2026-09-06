@@ -1,6 +1,8 @@
 package io.github.dzirbel
 
 import dev.detekt.gradle.Detekt
+import dev.detekt.gradle.DetektGenerateConfigTask
+import dev.detekt.gradle.extensions.DetektExtension
 import org.gradle.api.Task
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.kotlin.dsl.apply
@@ -10,6 +12,7 @@ import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import kotlin.test.Test
 import kotlin.test.assertContains
+import kotlin.test.assertEquals
 
 /**
  * Verifies task dependencies on projects created via [ProjectBuilder] (not TestKit projects built by test resource
@@ -186,6 +189,34 @@ class TasksTest {
 
         val detektMainJs = project.tasks.getByPath(":detektMainJs") as Detekt
         assertContains(detektMainJs.freeCompilerArgs.get(), "-Xexplicit-api=strict")
+    }
+
+    @Test
+    fun `plugin-owned compilations inherit the configured baseline lazily`() {
+        val project = project()
+        project.apply(plugin = "org.jetbrains.kotlin.multiplatform")
+        project.extensions.configure<KotlinMultiplatformExtension> {
+            js()
+            linuxX64()
+        }
+        project.apply(plugin = "io.github.dzirbel.detekt-config")
+        val tasks = listOf("detektMainJs", "detektTestJs", "detektMainLinuxX64", "detektTestLinuxX64")
+            .map { project.tasks.getByName(it) as Detekt }
+        val baselineFile = project.layout.projectDirectory.file("config/custom-baseline.xml")
+
+        project.extensions.configure<DetektExtension> { baseline.set(baselineFile) }
+
+        tasks.forEach { assertEquals(baselineFile, it.baseline.orNull, it.name) }
+    }
+
+    @Test
+    fun `generate config targets a project file instead of the temporary assembled config`() {
+        val project = project()
+        project.apply(plugin = "io.github.dzirbel.detekt-config")
+
+        val task = project.tasks.getByName("detektGenerateConfig") as DetektGenerateConfigTask
+
+        assertEquals(project.file("config/detekt/detekt.yml"), task.configFile.get().asFile)
     }
 
     private val TaskContainer.check: Task get() = getByPath(":check")

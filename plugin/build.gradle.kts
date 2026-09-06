@@ -14,6 +14,7 @@ dependencies {
 
     testImplementation(kotlin("test"))
     testImplementation(kotlin("gradle-plugin"))
+    testImplementation(libs.snakeyaml)
 }
 
 gradlePlugin {

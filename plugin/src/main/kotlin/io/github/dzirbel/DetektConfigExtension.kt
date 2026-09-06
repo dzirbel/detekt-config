@@ -8,7 +8,7 @@ interface DetektConfigExtension {
     data class ForbiddenMethodCall(val value: String, val reason: String? = null)
 
     /**
-     * List of regex paths (e.g. `** /test/ **`, without the spaces) which should be excluded for rules that are allowed
+     * List of glob paths (e.g. `** /test/ **`, without the spaces) which should be excluded for rules that are allowed
      * in tests (such as magic numbers).
      */
     val testPaths: ListProperty<String>
@@ -20,7 +20,7 @@ interface DetektConfigExtension {
     val forbiddenMethodCalls: ListProperty<ForbiddenMethodCall>
 
     companion object {
-        val DEFAULT_TEST_PATHS = listOf("**/test/**", "**/androidTest/**", "**/testFixtures/**")
+        val DEFAULT_TEST_PATHS = listOf("**/test/**", "**/androidTest/**", "**/testFixtures/**", "**/*Test/**")
 
         val DEFAULT_FORBIDDEN_METHOD_CALLS = listOf(
             ForbiddenMethodCall(

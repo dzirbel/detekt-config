@@ -10,9 +10,9 @@ The upstream detekt Gradle plugin creates the plain `detekt` task, source-set ta
 Android, and JVM multiplatform compilations. This plugin uses one internal adapter to map each Kotlin compilation to one
 type-resolved detekt task and makes the root `detekt` task depend on every mapped task:
 
-- JVM tasks reuse the upstream type-resolved task and use the compilation's Kotlin source-set directories, output,
+- JVM tasks reuse the upstream type-resolved task and use the compilation's filtered Kotlin source sets, output,
   compile libraries, and friend paths.
-- JS and native tasks use the compilation's Kotlin source-set directories, detekt's CLI classpath, associated
+- JS and native tasks use the compilation's filtered Kotlin source sets, detekt's CLI classpath, associated
   compilation outputs as friend paths, transitive outputs from corresponding sibling JVM compilations when they exist,
   and a lenient JVM-compatible view of declared dependencies.
 - Tasks inherit the compilation's language/API versions, explicit API mode, opt-ins, and free compiler arguments. JVM
@@ -33,6 +33,8 @@ exist, the root `detekt` task has no sources of its own and therefore does not r
   that publish JVM variants and skips target-only artifacts; see [the support contract](support-contract.md).
 - Repository-owned Android coverage currently targets AGP 9.3 with built-in Kotlin. The variant source/classpath wiring
   itself remains delegated to detekt's Android integration.
+- JS/native tasks consume the configured `detekt.baseline`, but the plugin does not yet generate corresponding
+  compilation-specific baselines.
 
 Compose rules are loaded only when a JetBrains/Kotlin Compose compiler plugin is present or an Android
 application/library explicitly enables `buildFeatures.compose`. Android plugin presence alone is not treated as Compose

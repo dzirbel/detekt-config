@@ -1,6 +1,7 @@
 package io.github.dzirbel
 
 import dev.detekt.gradle.Detekt
+import dev.detekt.gradle.extensions.DetektExtension
 import org.gradle.api.Project
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.attributes.Category
@@ -58,8 +59,8 @@ internal class DetektCompilationAdapter(private val project: Project) {
         val reusesUpstreamTask = taskName in project.tasks.names
         val detektTask = project.detektTaskProvider(taskName)
         val compileTaskProvider = compilation.compileTaskProvider
-        val sourceDirectories = project.providers.provider {
-            compilation.allKotlinSourceSets.map { it.kotlin.sourceDirectories }
+        val sources = project.providers.provider {
+            compilation.allKotlinSourceSets.map { it.kotlin }
         }
         val associatedOutputs = project.providers.provider {
             compilation.transitiveAssociatedCompilations().map { it.output.allOutputs }
@@ -79,7 +80,10 @@ internal class DetektCompilationAdapter(private val project: Project) {
                 append(" with type resolution")
             }
             dependsOn(compileTaskProvider)
-            setSource(sourceDirectories)
+            setSource(sources)
+            if (!reusesUpstreamTask) {
+                baseline.convention(project.extensions.getByType<DetektExtension>().baseline)
+            }
             apiVersion.convention(
                 compileTaskProvider.flatMap { it.compilerOptions.apiVersion.map { version -> version.version } },
             )

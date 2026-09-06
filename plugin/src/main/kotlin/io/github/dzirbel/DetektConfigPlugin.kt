@@ -1,5 +1,6 @@
 package io.github.dzirbel
 
+import dev.detekt.gradle.DetektGenerateConfigTask
 import dev.detekt.gradle.extensions.DetektExtension
 import dev.detekt.gradle.extensions.FailOnSeverity
 import org.gradle.api.Plugin
@@ -16,6 +17,11 @@ class DetektConfigPlugin : Plugin<Project> {
         target.configure<DetektExtension> {
             config.setFrom(target.buildDetektConfig().map { target.resources.text.fromString(it) })
             failOnSeverity.set(FailOnSeverity.Warning)
+        }
+
+        target.tasks.named("detektGenerateConfig", DetektGenerateConfigTask::class.java).configure {
+            // Upstream uses the last analysis config, which here is an already-existing temporary text resource.
+            configFile.convention(target.rootProject.layout.projectDirectory.file("config/detekt/detekt.yml"))
         }
 
         target.dependencies {
