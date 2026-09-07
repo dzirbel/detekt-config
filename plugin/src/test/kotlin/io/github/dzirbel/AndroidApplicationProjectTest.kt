@@ -5,7 +5,6 @@ import kotlin.test.assertFalse
 
 class AndroidApplicationProjectTest : SampleProjectTest(
     projectName = "android-application",
-    requiresAndroidSdk = true,
 ) {
 
     private val mainFile = projectDir.resolve(

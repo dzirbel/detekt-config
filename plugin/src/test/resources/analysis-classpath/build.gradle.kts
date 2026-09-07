@@ -11,6 +11,7 @@ repositories {
         forRepository {
             maven {
                 url = uri("repository")
+                artifactUrls(layout.buildDirectory.dir("repository"))
                 metadataSources {
                     gradleMetadata()
                     mavenPom()
@@ -47,5 +48,5 @@ configurations.matching { it.name.endsWith("AnalysisClasspath") }.configureEach 
 // Repair the deliberately incomplete Maven publication for the artifact-recovery test.
 tasks.register<Jar>("restoreArtifact") {
     archiveFileName.set("missing-artifact-1.0.jar")
-    destinationDirectory.set(layout.projectDirectory.dir("repository/test/analysis/missing-artifact/1.0"))
+    destinationDirectory.set(layout.buildDirectory.dir("repository/test/analysis/missing-artifact/1.0"))
 }

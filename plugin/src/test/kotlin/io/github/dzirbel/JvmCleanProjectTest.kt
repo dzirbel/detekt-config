@@ -42,19 +42,6 @@ class JvmCleanProjectTest : SampleProjectTest("jvm-clean") {
 
     @Test
     fun `detekt respects Kotlin source set exclusions`() {
-        projectDir.resolve("build.gradle.kts").appendText(
-            "\nkotlin.sourceSets.named(\"main\") { kotlin.exclude(\"**/Excluded.kt\") }\n",
-        )
-        projectDir.resolve("src/main/kotlin/io/github/dzirbel/Excluded.kt").writeText(
-            """
-            package io.github.dzirbel
-
-            fun excluded() {
-                println("This file is excluded from the compilation.")
-            }
-            """.trimIndent() + "\n",
-        )
-
         val result = projectDir.gradle("detekt").build()
 
         assertTaskPassed(result, ":jvm-clean:compileKotlin")

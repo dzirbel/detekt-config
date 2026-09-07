@@ -20,10 +20,12 @@ private val compilerErrorCountRegex = Regex(
 
 abstract class SampleProjectTest(
     private val projectName: String,
-    private val requiresAndroidSdk: Boolean = false,
 ) {
-    // Detekt reports canonical paths; this also resolves macOS's /var -> /private/var alias.
-    private val fixtureRoot = Files.createTempDirectory("detekt-config-test-").toFile().canonicalFile
+    // Keep the same depth as src/test/resources so checked-in repository-relative paths work unchanged.
+    private val fixtureRoot = Files.createTempDirectory(
+        Files.createDirectories(File("build/test-fixtures").toPath()),
+        "fixture-",
+    ).toFile().canonicalFile
 
     @get:Rule
     val fixtureCleanup = object : ExternalResource() {
@@ -35,26 +37,14 @@ abstract class SampleProjectTest(
     protected val projectDir: File = run {
         val sourceRoot = File("src/test/resources")
         copyFixtureResources(sourceRoot, fixtureRoot)
-        if (requiresAndroidSdk) {
-            writeAndroidSdkLocation(fixtureRoot, projectName)
-        }
-
-        val repositoryRoot = File("..").canonicalFile.invariantSeparatorsPath
-        fixtureRoot.resolve("settings.gradle.kts").let { settingsFile ->
-            val settings = settingsFile.readText()
-                .replace("../../../..", repositoryRoot)
-                .replace(Regex("""(?m)^include\("[^"]+"\)\n?"""), "")
-                .trimEnd()
-            settingsFile.writeText("$settings\n\ninclude(\"$projectName\")\n")
-        }
         fixtureRoot.resolve(projectName)
     }
 }
 
-private fun writeAndroidSdkLocation(fixtureRoot: File, projectName: String) {
+private fun androidSdkLocation(): File? {
     val environment = System.getenv()
     val userHome = File(System.getProperty("user.home"))
-    val androidSdk = sequenceOf(
+    return sequenceOf(
         environment["ANDROID_HOME"],
         environment["ANDROID_SDK_ROOT"],
         userHome.resolve("Android/Sdk").path,
@@ -65,17 +55,10 @@ private fun writeAndroidSdkLocation(fixtureRoot: File, projectName: String) {
         .filterNotNull()
         .map(::File)
         .firstOrNull(File::isDirectory)
-        ?: error(
-            "Android SDK not found for the $projectName TestKit fixture. " +
-                "Set ANDROID_HOME to an installed Android SDK.",
-        )
-
-    val escapedPath = androidSdk.canonicalPath.replace("\\", "\\\\")
-    fixtureRoot.resolve("local.properties").writeText("sdk.dir=$escapedPath\n")
 }
 
 private fun copyFixtureResources(sourceRoot: File, destinationRoot: File) {
-    val excludedDirectories = setOf(".gradle", ".kotlin", "build", "kotlin-js-store")
+    val excludedDirectories = setOf(".gradle", ".kotlin", "build", "build-cache", "kotlin-js-store")
     sourceRoot.walkTopDown()
         .onEnter { directory -> directory == sourceRoot || directory.name !in excludedDirectories }
         .forEach { source ->
@@ -92,6 +75,7 @@ internal fun File.gradle(vararg arguments: String): GradleRunner {
     return GradleRunner.create()
         .withProjectDir(this)
         .withArguments(arguments.toList() + "--continue")
+        .withEnvironment(System.getenv() + androidSdkLocation()?.let { mapOf("ANDROID_HOME" to it.path) }.orEmpty())
 }
 
 internal fun assertTaskNotRun(result: BuildResult, path: String) {

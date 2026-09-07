@@ -6,7 +6,6 @@ import kotlin.test.assertEquals
 
 class AndroidComposeLibraryProjectTest : SampleProjectTest(
     projectName = "android-compose-library",
-    requiresAndroidSdk = true,
 ) {
 
     private val composeFile = projectDir.resolve(
