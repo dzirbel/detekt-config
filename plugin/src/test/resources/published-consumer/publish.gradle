@@ -1,0 +1,9 @@
+// Applied to the repository build to publish its actual publications into this fixture's temporary repository.
+allprojects {
+    plugins.withId('maven-publish') {
+        publishing.repositories.maven {
+            name = 'ConsumerTest'
+            url = uri(System.getProperty('consumerTestRepository'))
+        }
+    }
+}

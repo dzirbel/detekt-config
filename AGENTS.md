@@ -42,4 +42,6 @@ invocations are the repository-approved command form and should use the normal u
 - Frameworks: `kotlin.test`, `detekt-test`, and Gradle TestKit.
 - `plugin/` includes a mixture of pure unit tests and functional/end-to-end tests against sample Gradle projects
   `plugin/src/test/resources` to assert plugin and task behavior via TestKit.
+- Samples should be realistic Gradle projects, with straightforward configuration to make them easy to read and
+  evaluate. Tests should avoid modifying them (e.g. writing text into test fixture files) whenever possible.
 - Add rule behavior tests in `rules/src/test/kotlin` alongside the rule name.
