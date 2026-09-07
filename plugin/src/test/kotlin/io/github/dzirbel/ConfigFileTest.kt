@@ -42,7 +42,7 @@ class ConfigFileTest {
     }
 
     @Test
-    fun `assembled config parses and recursively merges generated values with bundled defaults`() {
+    fun `assembled config resolves extension defaults`() {
         val project = ProjectBuilder.builder().build()
         project.createDetektConfigExtension()
 
@@ -59,6 +59,21 @@ class ConfigFileTest {
             DetektConfigExtension.DEFAULT_FORBIDDEN_METHOD_CALLS.map { it.value },
             config.value<List<Map<String, String>>>("style", "ForbiddenMethodCall", "methods").map { it["value"] },
         )
+    }
+
+    @Test
+    fun `bundled config changes only at explicit extension placeholders`() {
+        val project = ProjectBuilder.builder().build()
+        val extension = project.createDetektConfigExtension()
+        extension.testPaths.set(listOf("**/customTests/**"))
+        extension.forbiddenMethodCalls.set(listOf(DetektConfigExtension.ForbiddenMethodCall("example.forbidden")))
+
+        val expected = readResource("base.yml")
+            .replace("'<TEST_PATHS>'", "['**/customTests/**']")
+            .replace("'<FORBIDDEN_METHOD_CALLS>'", "[{value: 'example.forbidden'}]")
+            .parse()
+
+        assertEquals(expected, project.buildDetektConfig().get().parse())
     }
 
     @Test
@@ -175,7 +190,7 @@ class ConfigFileTest {
             "first line\nsecond line",
             "CRLF\r\ncarriage return\rtab\tcontrol\u0001",
             "Unicode breaks\u0085\u2028\u2029, quotes '\" and backslash \\",
-            "literal <TEST_PATHS> and <FORBIDDEN_METHOD_CALLS>",
+            "literal '<TEST_PATHS>' and '<FORBIDDEN_METHOD_CALLS>'",
         )
         extension.testPaths.set(paths)
         extension.forbiddenMethodCalls.set(
@@ -199,8 +214,16 @@ class ConfigFileTest {
         val project = ProjectBuilder.builder().build()
         project.createDetektConfigExtension()
 
-        val config = (project.buildDetektConfig().get() + "\n" + readResource("compose.yml")).parseConfig()
+        val base = project.buildDetektConfig().get().parse()
+        val config = buildDetektConfig(
+            testPaths = DetektConfigExtension.DEFAULT_TEST_PATHS,
+            forbiddenMethodCalls = DetektConfigExtension.DEFAULT_FORBIDDEN_METHOD_CALLS,
+            compose = true,
+            files = emptyList(),
+        ).parse()
 
+        assertFalse("Compose" in base)
+        assertEquals(base + readResource("compose.yml").parse(), config)
         assertEquals(true, config.rule("dzirbel", "InjectConstructorParameterOrder")["active"])
         assertEquals(true, config.rule("Compose", "ModifierMissing")["active"])
     }

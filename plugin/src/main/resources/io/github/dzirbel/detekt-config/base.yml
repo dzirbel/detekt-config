@@ -1,3 +1,4 @@
+# <TEST_PATHS> and <FORBIDDEN_METHOD_CALLS> use the corresponding DetektConfigExtension values.
 config:
   validation: true
   checkExhaustiveness: true
@@ -122,6 +123,7 @@ complexity:
     allowedWithLengthLessThan: 5
     ignoreStringsRegex: '$^'
   TooManyFunctions:
+    excludes: '<TEST_PATHS>'
     active: true
     allowedFunctionsPerFile: 25
     allowedFunctionsPerClass: 25
@@ -198,6 +200,7 @@ exceptions:
     active: true
     methodNames: ['equals', 'finalize', 'hashCode', 'toString']
   InstanceOfCheckForException:
+    excludes: '<TEST_PATHS>'
     active: true
   NotImplementedDeclaration:
     active: true
@@ -223,6 +226,7 @@ exceptions:
   ThrowingExceptionInMain:
     active: true
   ThrowingExceptionsWithoutMessageOrCause:
+    excludes: '<TEST_PATHS>'
     active: true
     exceptions:
       - 'ArrayIndexOutOfBoundsException'
@@ -237,6 +241,7 @@ exceptions:
   ThrowingNewInstanceOfSameException:
     active: true
   TooGenericExceptionCaught:
+    excludes: '<TEST_PATHS>'
     active: false
     exceptionNames:
       - 'ArrayIndexOutOfBoundsException'
@@ -249,6 +254,7 @@ exceptions:
       - 'Throwable'
     allowedExceptionNameRegex: '^(_|(ignore|expected).*)'
   TooGenericExceptionThrown:
+    excludes: '<TEST_PATHS>'
     active: true
     exceptionNames:
       - 'Error'
@@ -676,11 +682,13 @@ performance:
   ArrayPrimitive:
     active: true
   CouldBeSequence:
+    excludes: '<TEST_PATHS>'
     active: true
     allowedOperations: 3
   ForEachOnRange:
     active: true
   SpreadOperator:
+    excludes: '<TEST_PATHS>'
     active: true
   UnnecessaryInitOnArray:
     active: true
@@ -697,6 +705,7 @@ potential-bugs:
     active: true
     forbiddenTypePatterns: ['kotlin.String']
   CastNullableToNonNullableType:
+    excludes: '<TEST_PATHS>'
     active: true
   CastToNullableType:
     active: true
@@ -757,6 +766,7 @@ potential-bugs:
   IteratorNotThrowingNoSuchElementException:
     active: true
   LateinitUsage:
+    excludes: '<TEST_PATHS>'
     active: false
     ignoreOnClassesPattern: ''
   MapGetWithNotNullAssertionOperator:
@@ -889,6 +899,7 @@ style:
     forbiddenImports: []
     allowedImports: []
   ForbiddenMethodCall:
+    methods: '<FORBIDDEN_METHOD_CALLS>'
     active: true
   ForbiddenNamedParam:
     active: false
@@ -912,6 +923,7 @@ style:
     active: true
     maxJumpCount: 1
   MagicNumber:
+    excludes: '<TEST_PATHS>'
     active: true
     ignoreNumbers: ['-1', '0', '1', '2', '100']
     ignoreHashCodeFunction: true
