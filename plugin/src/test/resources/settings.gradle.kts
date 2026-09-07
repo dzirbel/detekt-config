@@ -22,6 +22,7 @@ dependencyResolutionManagement {
 }
 
 include("js")
+include("analysis-classpath")
 include("android-application")
 include("android-compose-library")
 include("jvm")

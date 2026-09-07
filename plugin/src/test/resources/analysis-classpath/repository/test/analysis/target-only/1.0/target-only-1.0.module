@@ -1,0 +1,28 @@
+{
+    "formatVersion": "1.1",
+    "component": {
+        "group": "test.analysis",
+        "module": "target-only",
+        "version": "1.0"
+    },
+    "variants": [
+        {
+            "name": "jsApiElements",
+            "attributes": {
+                "org.gradle.category": "library",
+                "org.gradle.usage": "kotlin-api",
+                "org.jetbrains.kotlin.platform.type": "js"
+            },
+            "files": []
+        },
+        {
+            "name": "nativeApiElements",
+            "attributes": {
+                "org.gradle.category": "library",
+                "org.gradle.usage": "kotlin-api",
+                "org.jetbrains.kotlin.platform.type": "native"
+            },
+            "files": []
+        }
+    ]
+}

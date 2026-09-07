@@ -175,14 +175,18 @@ private fun Project.detektAnalysisClasspath(
     }
     return objects.fileCollection().from(
         configuration.map { analysisConfiguration ->
-            analysisConfiguration.incoming.artifactView {
+            val artifacts = analysisConfiguration.incoming.artifactView {
                 isLenient = true
                 componentFilter { identifier ->
                     identifier !is ModuleComponentIdentifier ||
                         identifier.group != "org.jetbrains.kotlin" ||
                         !identifier.module.startsWith("kotlin-stdlib")
                 }
-            }.files
+            }.artifacts
+            artifacts.resolvedArtifacts.map { resolved ->
+                checkAnalysisResolution(taskName, artifacts.failures)
+                resolved.map { it.file }
+            }
         },
     )
 }

@@ -1,0 +1,19 @@
+{
+    "formatVersion": "1.1",
+    "component": {
+        "group": "test.analysis",
+        "module": "incompatible-jvm",
+        "version": "1.0"
+    },
+    "variants": [
+        {
+            "name": "jvmApiElements",
+            "attributes": {
+                "org.gradle.category": "library",
+                "org.gradle.usage": "unsupported-usage",
+                "org.jetbrains.kotlin.platform.type": "jvm"
+            },
+            "files": []
+        }
+    ]
+}

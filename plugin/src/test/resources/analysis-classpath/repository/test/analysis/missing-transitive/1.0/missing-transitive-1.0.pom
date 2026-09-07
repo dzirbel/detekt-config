@@ -1,0 +1,14 @@
+<project>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>test.analysis</groupId>
+    <artifactId>missing-transitive</artifactId>
+    <version>1.0</version>
+    <packaging>pom</packaging>
+    <dependencies>
+        <dependency>
+            <groupId>test.analysis</groupId>
+            <artifactId>missing-module</artifactId>
+            <version>1.0</version>
+        </dependency>
+    </dependencies>
+</project>
