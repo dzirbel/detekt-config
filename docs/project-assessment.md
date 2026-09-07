@@ -1,11 +1,30 @@
 # Project assessment — 2026-09-05
 
-Reviewed from commit `263515e`. Changes from this assessment are intentionally uncommitted.
+Originally reviewed from commit `263515e` on 2026-09-05. Status refreshed on 2026-09-07 against `1796d7d`.
+The original fixes and subsequent implementation batches are committed; this documentation refresh is uncommitted.
+Historical validation is retained below and is distinguished from the current checkout verification.
+
+## Current implementation status
+
+| Area | Status and evidence |
+| --- | --- |
+| Initial correctness fixes | Landed in `7b0309e`; all five fixes below remain represented in the implementation/tests. |
+| Cacheable configuration composition | Landed in `02ce648`; `71d526e` adds exact cache-outcome, policy-edit, and override-order checks. |
+| Baseline consumption | `4f9ff52` proves JVM/JS suppression, visibility of new findings, and restoration after baseline edits. Compilation-specific JS/native generation remains open. |
+| Dependency-resolution diagnostics | `77558ce` warns for target-only variants and fails on unexpected resolution errors, with missing artifact/module/transitive and incompatible-JVM tests. |
+| KMP project dependencies | Current coverage verifies a type-dependent finding through a producer's `expect`/`actual` API on JS/native, including the producer JVM artifact. |
+| Fixture orchestration | `1796d7d` simplifies isolated fixture setup using checked-in settings; it still copies/configures the shared fixture tree. |
+| Publication, baseline task unification, rule semantics, CI/performance | Still open, except for baseline-consumption coverage and the harness changes noted above. |
+
+**Recommended next step:** add one isolated Kotlin/JVM consumer test using a temporary Maven publication of the plugin
+marker, plugin, and rules. Assert an exact custom-rule finding without composite substitution. This tests an unverified
+release boundary with a bounded change; it does not require finishing every analysis-fidelity improvement first.
+See [the architecture plan](architecture-plan.md#recommended-next-reviewable-step) for scope and follow-ups.
 
 ## Overall assessment
 
-The core is small and understandable: one compilation adapter, an extension with two options, bundled configuration,
-and one custom rule. Functional coverage is unusually broad for the implementation's size. It checks actual
+The core is small and understandable: one compilation adapter, an extension with two policy options plus ordered YAML
+overrides, bundled configuration, and one custom rule. Functional coverage is unusually broad for the implementation's size. It checks actual
 type-dependent findings, compilation outputs, JVM/JS/native/Android tasks, Compose detection, and configuration-cache
 reuse. Reusing upstream JVM/Android tasks is a sound direction.
 
@@ -21,7 +40,7 @@ burden without resolving that uncertainty.
 | Source-set filters discarded | The adapter rebuilt file trees from source directories. An excluded `Excluded.kt` compiled successfully but still failed `detektMain` on `println`. | Use each Kotlin `SourceDirectorySet` directly, preserving its filters. A TestKit regression checks compilation and analysis together. |
 | KMP/custom tests miss test exemptions | `commonTest` and JVM/JS `integrationTest` fixtures reported `MagicNumber` despite the intended test exemption. | Add `**/*Test/**` to the default globs. Existing clean JVM/JS lifecycle and configuration-cache tests now include non-exempt numeric literals in these directories. Correct the extension's documentation from regex to glob. |
 | JS/native tasks ignore baselines | Newly registered tasks had a null `baseline` even after `detekt.baseline` was configured. | Give plugin-created tasks a lazy baseline convention while retaining upstream JVM/Android selection. Cover JS/native properties and a real shared-code baseline consumed by JS analysis. |
-| Extension values can corrupt YAML | Raw multiline/control characters were interpolated into single quotes; the parser rejected a control character. Sequential substitution could also rewrite placeholder-like text inside a test path. | Escape control characters and line separators with double-quoted YAML when necessary; replace template tokens in one pass. Parse and round-trip strings, empty lists, and combined base/Compose configuration with duplicate keys forbidden. SnakeYAML is a test-only dependency. |
+| Extension values can corrupt YAML | Raw multiline/control characters were interpolated into single quotes; the parser rejected a control character. Sequential substitution could also rewrite placeholder-like text inside a test path. | The original escaping fix has been superseded by structured YAML composition with SnakeYAML as a runtime dependency. Parsed-YAML tests retain control-character, literal-placeholder, empty-list, and duplicate-key regressions. |
 | Config generation silently targets a temporary file | Upstream derives the output from the last analysis config, which here is an already-existing temporary text resource. The regression observed `build/tmp/resource/string….txt`. | Default `detektGenerateConfig.configFile` to the root project's `config/detekt/detekt.yml`. Verify the task property and real file generation. Task-level overrides remain possible. |
 
 The first targeted run failed on all five defects; the focused suite passed after the fixes. Documentation now links the
@@ -31,10 +50,13 @@ support contract and this assessment, and publishing instructions identify the a
 
 ### 1. Make partial analysis explicit and measurable
 
-**Priority: high.** The non-JVM dependency projection uses an unqualified lenient artifact view in
+**Priority: high; partially implemented.** The non-JVM dependency projection still uses a lenient artifact view in
 [`DetektCompilationAdapter.kt`](../plugin/src/main/kotlin/io/github/dzirbel/DetektCompilationAdapter.kt).
-Gradle's leniency suppresses resolution failures generally, including missing artifacts; it does not distinguish an
-expected target-only dependency from a broken repository or unavailable JVM variant.
+Its failures are now checked by `AnalysisResolution.kt`: dependencies whose candidate library variants are all non-JVM
+are skipped with a warning; other failures fail analysis-classpath resolution. Tests cover JS/native diagnostics and
+configuration-cache reuse, missing artifacts and repair, missing modules/transitive dependencies, and incompatible JVM
+variants. Classification reflects over Gradle's internal structured variant failure and fails closed if that structure
+changes; compatibility across Gradle versions remains untested.
 [Gradle artifact-view documentation](https://docs.gradle.org/current/userguide/artifact_views.html).
 
 Other fidelity risks visible in the adapter:
@@ -43,19 +65,20 @@ Other fidelity risks visible in the adapter:
   but also exposes implementation dependencies that the consumer never declared.
 - Associated JVM outputs are selected by compilation name across every JVM target. There is no explicit mapping between
   a non-JVM target and its intended JVM counterpart when a project has multiple JVM targets.
-- The current fixtures verify coroutine APIs and ordinary shared code, but do not cover real `expect`/`actual`
-  declarations, target-only APIs, generated sources, or a dependency on another KMP project.
+- Fixtures now verify coroutine APIs and a KMP project dependency with an `expect`/`actual` API. Target-only
+  dependency diagnostics are covered, but fidelity when source uses target-only APIs, generated sources, and multiple
+  JVM targets remains untested.
 - Compiler-error summaries are rejected by fixture assertions; the plugin does not provide an equivalent consumer-facing
   analysis-health gate. A clean task outcome can therefore overstate the scope of successful analysis.
 
-**Implementation:** introduce a small analysis-input model that records sources, compiler options, selected artifacts,
-associated outputs, and unresolved components. Expose diagnostics and distinguish intentionally unsupported dependencies
-from unexpected failures. Allow an explicit JVM-counterpart mapping when the choice is ambiguous. Investigate a minimal
-standard-library classpath instead of adding the entire CLI runtime; keep that change behind real dependency tests.
+**Remaining implementation:** introduce a small analysis-input model that records sources, compiler options, selected
+artifacts, associated outputs, and unresolved components. Extend the existing resolution diagnostics into an analysis-health
+contract, including compiler-error summaries. Allow an explicit JVM-counterpart mapping when the choice is ambiguous.
+Investigate a minimal standard-library classpath instead of adding the entire CLI runtime; keep that change behind real dependency tests.
 
-**Acceptance:** add fixtures for `expect`/`actual`, a JVM-compatible KMP project dependency, a target-only dependency,
-missing JVM artifacts, multiple JVM targets, and generated/excluded sources. Expected limitations must be observable;
-unexpected resolution failures must fail verification. Preserve the existing supported-subset contract rather than
+**Remaining acceptance:** add multiple-JVM-target, generated-source, and target-only-API fidelity fixtures. Preserve
+the existing excluded-source, KMP project dependency, `expect`/`actual`, and resolution-failure tests. Expected limitations
+must be observable; unexpected resolution failures must fail verification. Preserve the existing supported-subset contract rather than
 claiming that JVM projection fully models native or JS semantics.
 
 ### 2. Treat analysis, baselines, and lifecycle options as one task model
@@ -64,6 +87,10 @@ claiming that JVM projection fully models native or JS semantics.
 tasks. It has no matching JS/native compilation baseline generators. The plain `detektBaseline` task still uses
 upstream default source roots and syntax-only analysis, while the root `detekt` task aggregates type-resolved
 compilations. Existing JVM baseline task wiring is also not updated when this adapter changes analysis sources.
+
+`KmpBaselineProjectTest` now generates an upstream JVM baseline and proves selective shared-code suppression on both
+JVM and JS, including new findings and baseline-only edits with configuration-cache reuse. This strengthens consumption
+coverage; it does not implement JS/native generators or validate native baseline round trips.
 
 There is another compatibility gap in the source-empty lifecycle: upstream's `--auto-correct` is a property of the
 selected `Detekt` task. Setting it on root `detekt` does not forward it to the dependent compilation tasks. Setting
@@ -87,14 +114,14 @@ misformatted fixture; baseline outputs never collide across targets.
 integration well, but cannot prove plugin-marker/POM correctness or the dependencies available to an external consumer.
 `TasksTest` also puts the Kotlin Gradle plugin on every test's classpath.
 
-An additional isolated consumer applying only `io.github.dzirbel.detekt-config` failed even on `help` with
-`org/jetbrains/kotlin/gradle/plugin/KotlinBasePlugin`. The existing `no other plugins` unit test passes in its richer
+During the original assessment, an isolated consumer applying only `io.github.dzirbel.detekt-config` failed even on
+`help` with `org/jetbrains/kotlin/gradle/plugin/KotlinBasePlugin`. The existing `no other plugins` unit test passes in its richer
 classpath. This does not invalidate the tested Kotlin fixtures, but it does show that the unit test overstates standalone
 plugin applicability. The failure comes through the current detekt integration; adding an unconditional runtime Kotlin
 Gradle plugin dependency would risk forcing a compiler-plugin version onto consumers.
 
-Both locally built artifacts contain Java 21 class files (major version 65), while neither module declares a toolchain or
-explicit target. That is the observed build output, not a documented compatibility promise. The catalog pins one
+The original assessment observed Java 21 class files (major version 65) in both locally built artifacts. Neither module
+declares a toolchain or explicit target. That is the observed build output, not a documented compatibility promise. The catalog pins one
 Kotlin/AGP combination; the `kotlin-dsl` plugin obtains its compilation dependency version from the Gradle distribution.
 
 **Implementation:** publish both artifacts and the plugin marker into a temporary Maven repository and consume them
@@ -110,27 +137,15 @@ unless there is a concrete release need to separate them.
 
 ### 4. Make configuration composition a public, cacheable boundary
 
-**Implemented after this assessment:** recovered the configuration-composition stash and completed stable cacheable
-output, ordered consumer overrides, and resource namespacing. The original assessment below records the motivation;
-see [the architecture milestone](architecture-plan.md#4-separate-static-configuration-from-generated-overrides) and
-[the public configuration contract](../README.md#additional-configuration) for the resulting behavior.
+**Implemented:** `GenerateDetektConfig` is cacheable and writes stable `build/detekt/config.yml` output. Namespaced
+base/Compose resources, extension overrides, and ordered `detektConfig.config` files are merged with structured YAML;
+nested maps preserve siblings and later lists/scalars replace earlier values. SnakeYAML is a runtime dependency.
+See [the architecture milestone](architecture-plan.md#4-separate-static-configuration-from-generated-overrides) and
+[the public configuration contract](../README.md#additional-configuration).
 
-**Priority: medium.** The escaping defect is fixed, but full-file template substitution still couples immutable rule
-policy to extension-owned data. The plugin replaces upstream's config collection with a generated resource; there is no
-documented project-override API or precedence contract. Generating a defaults file does not make that file an effective
-override.
-
-**Implementation:** retain static resources and generate extension overrides into a stable task output. Prove detekt's
-nested-map/list merge precedence before choosing layered files; otherwise use a structured YAML writer. Expose and
-document additional consumer configuration files. Namespace bundled resources instead of loading globally generic
-`base.yml`, `compose.yml`, and `versions.properties` names; resource collisions are a risk to test, not a reproduced
-failure here.
-
-**Acceptance:** a consumer can override one nested rule without losing unrelated policy; empty lists replace defaults
-as documented; repeated cached builds do not regenerate unchanged files; extension changes invalidate the right tasks;
-an unrelated plugin's similarly named resource cannot alter this plugin's behavior. Maintain parsed-YAML regression
-coverage. Detekt documents rule validation and path filtering, but these do not establish a custom multi-file precedence
-contract: [configuration documentation](https://detekt.dev/docs/introduction/configurations/).
+`ConfigFileTest` covers parsed YAML and malformed inputs. `ConfigCacheProjectTest` asserts exact findings and task
+outcomes for unchanged reuse, build-cache restoration, file/extension edits, and reversal of override-file order.
+The original configuration-composition proposal is complete; retain these regressions when changing the public API.
 
 ### 5. Define custom-rule annotation semantics before expanding the ruleset
 
@@ -163,8 +178,8 @@ CI currently runs on pushes and manual dispatch, with one toolchain per OS. Add 
 the workflow, explicitly provision the required Android SDK, and preserve test reports on failure. The repository's
 `build` runs tests and plugin validation but does not run detekt against its own implementation; add independent
 self-analysis without creating a composite-build bootstrap cycle. Gradle warnings are globally hidden in fixtures, so
-use dedicated warning-sensitive compatibility tests. Replace the stale, partly completed instructions in
-[`architecture-plan.md`](architecture-plan.md) with tracked milestones as the next phases begin.
+use dedicated warning-sensitive compatibility tests. The refreshed
+[`architecture-plan.md`](architecture-plan.md) now tracks completed milestones and remaining work.
 
 **Acceptance:** report measured changes to clean/warm/edit latency and task counts; selected compilation analysis remains
 complete; changes in shared code invalidate every required target; PRs exercise a fast gate; release verification still
@@ -183,7 +198,7 @@ These are code-review risks, not newly reproduced failures:
 - Android Compose feature detection uses reflection and `afterEvaluate`. Cover feature-only activation independently
   from Compose compiler plugin activation and test configuration-cache reuse before redesigning that integration.
 
-## Validation
+## Historical validation — original 2026-09-05 assessment
 
 - Initial `./gradlew build`: successful in 2m 36s; 50 plugin tests passed. Rules tests were initially up to date.
 - Regression run before fixes: 20 tests executed, with five expected failures covering the defects above.
@@ -195,5 +210,15 @@ These are code-review risks, not newly reproduced failures:
 - `git diff --check`: passed. No commits or publication were made.
 
 Validation was performed on the local Linux host. No macOS/Windows run or package publication was performed. The isolated
-consumer failure described above is intentionally reported as outstanding; the normal supported-fixture suite does not
-cover that case.
+consumer failure described above has not been rechecked in this refresh; the current supported-fixture suite still does
+not cover that case.
+
+## Current checkout validation — 2026-09-07
+
+- `./gradlew build :rules:test --rerun --console=plain`: successful in 2m 41s on Linux. Both test tasks executed:
+  69 plugin tests and 9 rules tests passed with no failures, errors, or skips. Artifact assembly and plugin validation
+  were up to date; the root configuration cache was reused.
+- `git diff --check`: passed. This refresh changes only the architecture plan, assessment, and support contract;
+  no implementation changes, commits, or publication were made.
+- No new cross-OS or published-consumer validation was performed. The no-Kotlin-plugin failure remains historical
+  evidence, not a newly reproduced result.

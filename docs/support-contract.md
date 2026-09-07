@@ -25,9 +25,12 @@ Every supported analysis task must:
 
 Detekt's analysis engine consumes JVM classpath artifacts. JS and native tasks therefore resolve a separate, lenient
 JVM-compatible view of their declared dependency graph. Cross-platform libraries that publish a JVM variant are
-type-resolved; target-only `.klib` dependencies are skipped because detekt cannot load them as analysis classpath
-entries. When a KMP project has a JVM target, non-JVM test and custom test tasks also use the transitive outputs of
-corresponding associated JVM compilations as the JVM representation of shared project code. Kotlin standard-library
+type-resolved. A dependency whose library variants are all non-JVM is skipped with a warning naming the analysis task
+and explaining that its types are unavailable. Missing modules, missing artifacts, transitive resolution failures, and
+incompatible JVM variants fail resolution rather than silently reducing the analysis classpath. The classifier uses
+Gradle's internal structured variant-failure information and fails closed if that structure cannot be recognized.
+Target-only `.klib` types remain outside detekt's JVM analysis model. When a KMP project has a JVM target, non-JVM test
+and custom test tasks also use the transitive outputs of corresponding associated JVM compilations as the JVM representation of shared project code. Kotlin standard-library
 artifacts are excluded from the dependency projection so they do not conflict with the Kotlin version embedded in
 detekt.
 
@@ -35,7 +38,11 @@ Functional fixtures enforce the contract in isolated temporary builds. JVM cover
 sets, project output, and an external dependency. KMP JS and native fixtures exercise main and test compilations and use
 an external coroutine API in a type-resolved finding. The clean JVM/JS fixture adds custom `integrationTest`
 compilations, asserts that all six compilation tasks emit no compiler-error summary, and verifies configuration-cache
-reuse. The Android application fixture covers debug/release production variants plus debug unit and instrumented tests,
+reuse. A separate KMP producer/consumer fixture checks JS/native analysis of an `expect`/`actual` API through the
+producer's JVM artifact, with an exact type-dependent finding. Resolution fixtures cover target-only warnings,
+configuration-cache reuse, missing artifacts and repair, missing modules/transitive dependencies, and incompatible JVM
+variants. These checks do not establish full target-only API fidelity or an unambiguous mapping across multiple JVM
+targets. The Android application fixture covers debug/release production variants plus debug unit and instrumented tests,
 including project-output and external-dependency resolution. The Android library fixture covers Compose findings on
 debug/release variants. Together they exercise both Android-before-config and config-before-Android plugin application
 orders.

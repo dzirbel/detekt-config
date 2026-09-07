@@ -1,9 +1,32 @@
 # Architecture plan
 
-See the later [project assessment](project-assessment.md) for verified fixes and the current proposed priorities.
+Status refreshed on 2026-09-07 against commit `1796d7d`. Completed milestones below are present in committed code;
+this status refresh is uncommitted for review. See [the project assessment](project-assessment.md) for remaining risks
+and follow-up acceptance criteria. Each implementation step should remain independently reviewable and keep
+`./gradlew build` green.
 
-This plan separates correctness gaps from structural improvements. Each phase should keep `./gradlew build` green and
-add functional coverage before changing the supported task graph.
+| Milestone | Current status |
+| --- | --- |
+| 1. Support contract | Implemented for the documented matrix; additional platforms and fidelity cases remain outside that contract. |
+| 2. Compilation task topology | Implemented for analysis; unified baseline generation and root CLI-option propagation remain open. |
+| 3. Android and Compose | Implemented for AGP 9.3 built-in Kotlin; Android cache and disabled-integration edge cases remain open. |
+| 4. Configuration composition | Implemented, with cache invalidation and ordered-override regression coverage. |
+| 5. Public and release boundaries | Open; recommended next step is an isolated published-artifact consumer test. |
+
+After these milestones, dependency-resolution hardening now distinguishes target-only dependencies from unexpected
+failures. KMP project-dependency coverage also exercises `expect`/`actual` APIs. This completes part of assessment
+priority 1, not its entire analysis-fidelity proposal.
+
+## Recommended next reviewable step
+
+Add a functional consumer test that publishes the plugin marker, plugin, and rules to a temporary Maven repository,
+then applies the plugin in an isolated Kotlin/JVM build without `includeBuild` or rules dependency substitution. Assert
+an exact custom-rule finding so the test proves packaged ruleset discovery as well as plugin/dependency resolution.
+Use a repository under the test build directory; no remote publication is needed.
+
+Keep this step focused on the supported Kotlin/JVM consumer. Track the previously observed no-Kotlin-plugin loading
+failure separately, and decide its support policy before changing runtime dependencies. Publication metadata,
+toolchains, compatibility matrices, and baseline task redesign should be separate review steps.
 
 ## 1. Define and enforce the support contract
 
@@ -11,24 +34,13 @@ The current contract and its enforced compatibility matrix are documented in
 [the type-resolution support contract](support-contract.md). Android application/library coverage belongs to phase 3;
 custom KMP topology coverage belongs to phase 2.
 
-Create a small compatibility matrix covering JVM, Android JVM, and KMP JVM/JS/native projects. If compatibility with the
-removed standalone Kotlin/JS plugin remains a goal, test it in a separately version-pinned legacy fixture rather than the
-current Kotlin fixture build. For each project type, cover main, test, and custom compilations where the Kotlin plugin
-exposes them. A supported type-resolved task must:
+The fixtures cover JVM main/test/custom compilations, KMP JVM/JS main/test/custom compilations, native main/test,
+and Android production/test variants. They assert compilation sources and outputs, type-dependent external-dependency
+findings, compiler-error-free analysis, and lifecycle participation. Fixtures run in isolated temporary directories
+under `plugin/build/test-fixtures`, sharing dependency caches while isolating project state and the fixture build cache.
 
-- analyze exactly the compilation's source hierarchy;
-- resolve project and external dependency symbols;
-- inherit relevant compiler options and friend paths;
-- emit no Kotlin compiler-error summary; and
-- participate once in `check` and the root `detekt` lifecycle.
-
-Turn the current JS compiler-error expectations into failing regression tests, then fix the classpath and compiler-option
-wiring until those warnings disappear. Add an external-dependency finding for JS and native, analogous to the JVM
-fixture, so successful syntax-only analysis cannot satisfy the tests.
-
-Run functional fixtures from isolated temporary project directories instead of writing Gradle, Kotlin, and compilation
-state into `src/test/resources`. Keep dependency caches shared for runtime, but prevent tests from depending on artifacts
-left by an earlier test or local invocation.
+Remaining support cases include native custom compilations, multiple JVM targets, generated sources, and the Android
+edge cases listed in the assessment. Standalone Kotlin/JS remains unsupported with the current Kotlin version.
 
 ## 2. Replace the parallel task topology
 
@@ -37,19 +49,10 @@ example, `detektMainJvm` and `detektTestJs`), allowing upstream JVM tasks to be 
 missing JS/native tasks. The root `detekt` task is source-empty and aggregates every compilation task exactly once.
 Functional coverage includes custom JVM/JS KMP compilations and a twice-run, warning-rejecting configuration-cache test.
 
-Introduce one internal compilation-to-detekt adapter rather than independently registering a second family of tasks.
-Reuse and configure upstream type-resolved tasks for JVM and Android when they exist; register tasks only for unsupported
-JS/native compilations. Keep one documented naming order and one aggregation path. Make the root `detekt` entry point a
-true lifecycle task (or empty the upstream plain task's sources) whenever per-compilation tasks exist, so a clean JVM
-project is not analyzed a second time without type resolution.
-
-Provider-based wiring now carries source directories, language/API versions, opt-ins, free compiler arguments, JVM
-classpath, friend paths, JVM target, no-JDK mode, and multiplatform mode without realizing compile tasks during
-configuration. Preserve that wiring during the topology replacement, add explicit API mode, and add a
-configuration-cache functional test that runs twice and rejects configuration warnings.
-
-Acceptance criterion: a KMP JVM/JS fixture exposes and runs one type-resolved analysis task per compilation through the
-root lifecycle, while upstream source-set or baseline tasks remain available only when they serve a distinct purpose.
+Provider-based wiring carries filtered source sets, language/API versions, opt-ins, free compiler arguments, JVM
+classpath, friend paths, JVM target, no-JDK mode, and multiplatform mode. Plugin-created main tasks also inherit explicit
+API mode. Baseline generators do not yet share this adapter, and root `--auto-correct` propagation remains open; see
+assessment priority 2.
 
 ## 3. Make Android and Compose behavior explicit
 
@@ -62,12 +65,8 @@ Compose configuration and the Compose rules dependency are enabled only when the
 plugin is present, or when an Android application/library explicitly enables `android.buildFeatures.compose`. Applying
 an Android plugin by itself no longer opts a project into Compose rules.
 
-Add minimal Android library and application TestKit fixtures, including one non-Compose project and one Compose project.
-Verify variant and nested-test task aggregation, source/classpath accuracy, and plugin application order.
-
-Stop treating every Android project as Compose. Detect the Compose compiler plugin or Android Compose feature state, and
-add Compose configuration and dependencies only when Compose is enabled. Preserve support for both plugin application
-orders and document the exact detection contract.
+Remaining coverage includes Android configuration-cache reuse, Compose feature-only activation independent of the
+compiler plugin, and disabled or Kotlin-free Android integration. These are follow-ups, not covered support promises.
 
 ## 4. Separate static configuration from generated overrides
 
