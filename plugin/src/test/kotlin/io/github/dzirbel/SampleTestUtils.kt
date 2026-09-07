@@ -156,25 +156,25 @@ private fun File.locationOf(text: String): SourceLocation = useLines { lines ->
 
 private data class SourceLocation(val line: Int, val column: Int)
 
-private fun BuildResult.outputLines(): Sequence<String> =
-    output.lineSequence().map { line -> line.replace(ansiRegex, "").trimEnd('\r') }
+private fun String.outputLines(): Sequence<String> =
+    lineSequence().map { line -> line.replace(ansiRegex, "").trimEnd('\r') }
 
-private fun BuildResult.findTaskOutput(path: String): List<String> {
-    val lines = outputLines().toList()
+internal fun String.findTaskOutput(path: String): List<String> {
     val matcher = taskLineRegex(path)
-    val startIndex = lines.indexOfFirst { line -> matcher.containsMatchIn(line) }
-    if (startIndex == -1) return emptyList()
+    val anyTaskMatcher = taskLineRegex()
     return buildList {
-        var i = startIndex + 1
-        while (i < lines.size) {
-            val line = lines[i]
-            if (taskLineRegex().containsMatchIn(line)) break
-            val diagnostic = detektDiagnosticRegex.matchEntire(line)
-            val normalizedLine = diagnostic?.let { "${it.groupValues[1]}: ${it.groupValues[2]}" } ?: line
-            if (normalizedLine.isDetektOutput()) {
-                add(normalizedLine)
+        var inTaskOutput = false
+        for (line in outputLines()) {
+            if (anyTaskMatcher.containsMatchIn(line)) {
+                // Gradle can resume a task's output under a repeated header after another task logs.
+                inTaskOutput = matcher.containsMatchIn(line)
+            } else if (inTaskOutput) {
+                val diagnostic = detektDiagnosticRegex.matchEntire(line)
+                val normalizedLine = diagnostic?.let { "${it.groupValues[1]}: ${it.groupValues[2]}" } ?: line
+                if (normalizedLine.isDetektOutput()) {
+                    add(normalizedLine)
+                }
             }
-            i++
         }
     }
 }
@@ -187,7 +187,7 @@ private fun String.isDetektOutput(): Boolean =
         startsWith("See https://mrmans0n.github.io/compose-rules/")
 
 private fun BuildResult.findTaskLines(path: String): Sequence<String> =
-    outputLines().filter { line -> taskLineRegex(path).containsMatchIn(line) }
+    output.outputLines().filter { line -> taskLineRegex(path).containsMatchIn(line) }
 
 private fun BuildResult.findTaskOutcome(path: String): TaskOutcome? {
     val suffixes = findTaskLines(path)
@@ -231,5 +231,5 @@ private fun assertTaskRun(result: BuildResult, path: String, outcomes: Set<TaskO
         "expected $path outcome in $outcomes, but was $parsedOutcome. Output:\n\n${result.output}",
     )
 
-    return result.findTaskOutput(path)
+    return result.output.findTaskOutput(path)
 }
