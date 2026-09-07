@@ -1,6 +1,6 @@
 # Architecture plan
 
-Status refreshed on 2026-09-07 against commit `1796d7d`. Completed milestones below are present in committed code;
+Status refreshed on 2026-09-07 against commit `b4d5a88`. Completed milestones below are present in committed code;
 this status refresh is uncommitted for review. See [the project assessment](project-assessment.md) for remaining risks
 and follow-up acceptance criteria. Each implementation step should remain independently reviewable and keep
 `./gradlew build` green.
@@ -11,7 +11,7 @@ and follow-up acceptance criteria. Each implementation step should remain indepe
 | 2. Compilation task topology | Implemented for analysis; unified baseline generation and root CLI-option propagation remain open. |
 | 3. Android and Compose | Implemented for AGP 9.3 built-in Kotlin; Android cache and disabled-integration edge cases remain open. |
 | 4. Configuration composition | Implemented, with cache invalidation and ordered-override regression coverage. |
-| 5. Public and release boundaries | Open; recommended next step is an isolated published-artifact consumer test. |
+| 5. Public and release boundaries | Partially implemented: isolated published Kotlin/JVM consumer coverage landed in `b4d5a88`; standalone rules, compatibility policy, and release metadata remain open. |
 
 After these milestones, dependency-resolution hardening now distinguishes target-only dependencies from unexpected
 failures. KMP project-dependency coverage also exercises `expect`/`actual` APIs. This completes part of assessment
@@ -19,14 +19,26 @@ priority 1, not its entire analysis-fidelity proposal.
 
 ## Recommended next reviewable step
 
-Add a functional consumer test that publishes the plugin marker, plugin, and rules to a temporary Maven repository,
-then applies the plugin in an isolated Kotlin/JVM build without `includeBuild` or rules dependency substitution. Assert
-an exact custom-rule finding so the test proves packaged ruleset discovery as well as plugin/dependency resolution.
-Use a repository under the test build directory; no remote publication is needed.
+Align baseline generation with compilation analysis, starting with **JVM source-filter parity**. The adapter replaces
+analysis sources with filtered Kotlin source sets but does not apply that wiring to upstream baseline generators.
+The existing baseline round trip proves suppression for ordinary shared sources; it does not prove that generation
+honors those filters. This is a code-inspection gap, not a newly reproduced failure.
 
-Keep this step focused on the supported Kotlin/JVM consumer. Track the previously observed no-Kotlin-plugin loading
-failure separately, and decide its support policy before changing runtime dependencies. Publication metadata,
-toolchains, compatibility matrices, and baseline task redesign should be separate review steps.
+The first reviewable change should:
+
+- Add a checked-in JVM fixture with included syntax/type-dependent findings and an excluded file containing a finding.
+- Assert exact analysis findings before generation and exact baseline IDs afterward, proving the excluded file is absent.
+- Make the corresponding JVM baseline task use the same filtered compilation sources if the regression exposes a mismatch.
+- Consume the baseline, prove only existing included findings are suppressed, and prove an additional finding still fails.
+
+Keep fixture inputs unchanged, with generated baselines under `build/`. Run the focused test and `./gradlew build`.
+Then extend the shared compilation model to compiler inputs and JS/native baseline generators, with deterministic output
+naming and round-trip coverage. Root baseline aggregation and `--auto-correct` propagation remain separate review steps.
+
+The previously recommended published-consumer slice landed in `b4d5a88`: `PublishedConsumerProjectTest` publishes the
+marker, plugin, and rules into a temporary Maven repository, asserts an exact packaged custom-rule finding, and passes
+with corrected source. It uses neither composite substitution nor the user's Maven local repository. No-Kotlin-plugin
+loading policy, standalone rules consumption, toolchains, compatibility matrices, and publication metadata remain open.
 
 ## 1. Define and enforce the support contract
 
@@ -82,8 +94,9 @@ project overrides, configuration-cache reuse, build-cache restoration, and inval
 
 - Decide whether plugin and rules versions are intentionally locked together. Then use one typed build-time source and
   generate any runtime properties resource from it.
-- Add plugin display name, description, tags, publication POM metadata, and an artifact-consumption test that uses a
-  temporary Maven repository instead of composite-build substitution.
+- Implemented: a Kotlin/JVM artifact-consumption test using a temporary Maven repository instead of composite-build
+  substitution, including packaged ruleset discovery.
+- Add plugin display name, description, tags, and publication POM metadata.
 - Resolve `InjectConstructorParameterOrder` annotations by supported fully qualified names, or make those names
   configurable, so an unrelated annotation named `Inject` is not reported.
 - Add user-facing rule documentation and test the published service-loader artifact.

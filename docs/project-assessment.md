@@ -1,6 +1,6 @@
 # Project assessment — 2026-09-05
 
-Originally reviewed from commit `263515e` on 2026-09-05. Status refreshed on 2026-09-07 against `1796d7d`.
+Originally reviewed from commit `263515e` on 2026-09-05. Status refreshed on 2026-09-07 against `b4d5a88`.
 The original fixes and subsequent implementation batches are committed; this documentation refresh is uncommitted.
 Historical validation is retained below and is distinguished from the current checkout verification.
 
@@ -14,12 +14,14 @@ Historical validation is retained below and is distinguished from the current ch
 | Dependency-resolution diagnostics | `77558ce` warns for target-only variants and fails on unexpected resolution errors, with missing artifact/module/transitive and incompatible-JVM tests. |
 | KMP project dependencies | Current coverage verifies a type-dependent finding through a producer's `expect`/`actual` API on JS/native, including the producer JVM artifact. |
 | Fixture orchestration | `1796d7d` simplifies isolated fixture setup using checked-in settings; it still copies/configures the shared fixture tree. |
-| Publication, baseline task unification, rule semantics, CI/performance | Still open, except for baseline-consumption coverage and the harness changes noted above. |
+| Published Kotlin/JVM consumer | Landed in `b4d5a88`: temporary Maven publication of marker/plugin/rules, exact custom-rule finding, and corrected-source success without composite substitution. |
+| Remaining release work, baseline task unification, rule semantics, CI/performance | Still open, except for the implemented slices noted above. |
 
-**Recommended next step:** add one isolated Kotlin/JVM consumer test using a temporary Maven publication of the plugin
-marker, plugin, and rules. Assert an exact custom-rule finding without composite substitution. This tests an unverified
-release boundary with a bounded change; it does not require finishing every analysis-fidelity improvement first.
-See [the architecture plan](architecture-plan.md#recommended-next-reviewable-step) for scope and follow-ups.
+**Recommended next step:** align baseline generation with compilation analysis, beginning with a JVM source-filter
+regression and any required source-wiring fix. Assert exact baseline contents, suppression, and visibility of new
+findings using checked-in fixture inputs. This is the first bounded slice of priority 2; JS/native generators and root
+lifecycle options follow separately. The previously recommended published-consumer test is now committed.
+See [the architecture plan](architecture-plan.md#recommended-next-reviewable-step) for scope and acceptance criteria.
 
 ## Overall assessment
 
@@ -110,8 +112,11 @@ misformatted fixture; baseline outputs never collide across targets.
 
 ### 3. Test the real consumer and publication boundary
 
-**Priority: high.** All functional fixtures use a composite build and rules dependency substitution. They validate source
-integration well, but cannot prove plugin-marker/POM correctness or the dependencies available to an external consumer.
+**Priority: high; partially implemented.** `PublishedConsumerProjectTest` now publishes the actual plugin marker, plugin,
+and rules publications into a temporary Maven repository. Its isolated Kotlin/JVM consumer exclusively resolves this
+project's groups there, asserts an exact `InjectConstructorParameterOrder` finding, and passes with corrected source.
+This validates marker/POM resolution and packaged ruleset discovery through the config plugin for the current JVM setup.
+The other functional fixtures still use a composite build and rules dependency substitution.
 `TasksTest` also puts the Kotlin Gradle plugin on every test's classpath.
 
 During the original assessment, an isolated consumer applying only `io.github.dzirbel.detekt-config` failed even on
@@ -124,8 +129,8 @@ The original assessment observed Java 21 class files (major version 65) in both 
 declares a toolchain or explicit target. That is the observed build output, not a documented compatibility promise. The catalog pins one
 Kotlin/AGP combination; the `kotlin-dsl` plugin obtains its compilation dependency version from the Gradle distribution.
 
-**Implementation:** publish both artifacts and the plugin marker into a temporary Maven repository and consume them
-without `includeBuild`. Decide whether projects with no Kotlin plugin are supported; provide a clear diagnostic or fix
+**Remaining implementation:** test the published rules artifact independently of the config plugin. Decide whether
+projects with no Kotlin plugin are supported; provide a clear diagnostic or fix
 the upstream loading boundary accordingly. Declare build toolchains and minimum runtime targets. Test a small deliberate
 Gradle/Kotlin/AGP matrix, including task-level compiler-option overrides, Android cache reuse, and plugin application
 orders. Add publication metadata, sources artifacts, and a tag/version consistency check.
@@ -213,7 +218,7 @@ Validation was performed on the local Linux host. No macOS/Windows run or packag
 consumer failure described above has not been rechecked in this refresh; the current supported-fixture suite still does
 not cover that case.
 
-## Current checkout validation — 2026-09-07
+## Historical validation — plan refresh at `1796d7d` on 2026-09-07
 
 - `./gradlew build :rules:test --rerun --console=plain`: successful in 2m 41s on Linux. Both test tasks executed:
   69 plugin tests and 9 rules tests passed with no failures, errors, or skips. Artifact assembly and plugin validation
@@ -222,3 +227,15 @@ not cover that case.
   no implementation changes, commits, or publication were made.
 - No new cross-OS or published-consumer validation was performed. The no-Kotlin-plugin failure remains historical
   evidence, not a newly reproduced result.
+
+
+## Current checkout validation — `b4d5a88`, 2026-09-07
+
+- `./gradlew :plugin:test --tests io.github.dzirbel.PublishedConsumerProjectTest --rerun --console=plain`:
+  successful in 19s; the test task executed, with 1 test and no failures, errors, or skips. This rechecked temporary
+  publication and both failing/corrected consumer builds. The initial invocation without `--rerun` restored cached results.
+- Reviewed the compilation adapter, existing baseline round trip, and published-consumer fixture. JVM baseline
+  source-filter parity remains an inspection-based gap to reproduce in the next step.
+- `git diff --check`: passed. Only the architecture plan and assessment changed; changes remain uncommitted for review.
+- The full build, cross-OS matrix, standalone rules consumer, and no-Kotlin-plugin case were not rerun in this
+  documentation-only refresh. Earlier full-suite results above are historical.
