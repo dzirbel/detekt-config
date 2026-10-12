@@ -163,4 +163,68 @@ class InjectConstructorParameterOrderTest {
             .hasStartSourceLocation(6, 5)
             .hasMessage("Constructor parameters should be in alphabetical order: apple, zebra.")
     }
+
+    @Test
+    fun `orders parameter names rather than their types and reports the complete order`() {
+        val findings = subject.lint(
+            """
+            class Sample @javax.inject.Inject constructor(
+                zebra: Apple,
+                apple: Zebra,
+                middle: Middle,
+            )
+            """.trimIndent(),
+        )
+
+        assertThat(findings)
+            .singleElement()
+            .hasMessage("Constructor parameters should be in alphabetical order: apple, middle, zebra.")
+    }
+
+    @Test
+    fun `class and parameter annotations do not mark a constructor as injected`() {
+        val findings = subject.lint(
+            """
+            @Inject
+            class Sample constructor(
+                @Inject val zebra: Zebra,
+                val apple: Apple,
+            )
+            """.trimIndent(),
+        )
+
+        assertThat(findings).isEmpty()
+    }
+
+    @Test
+    fun `secondary constructors without Inject are ignored`() {
+        val findings = subject.lint(
+            """
+            class Sample {
+                constructor(zebra: Zebra, apple: Apple)
+            }
+            """.trimIndent(),
+        )
+
+        assertThat(findings).isEmpty()
+    }
+
+    @Test
+    fun `each unordered Inject constructor reports exactly once`() {
+        val findings = subject.lint(
+            """
+            class Sample @javax.inject.Inject constructor(zebra: Zebra, apple: Apple) {
+                @javax.inject.Inject constructor(zebra: Zebra, apple: Apple, middle: Middle) : this(zebra, apple)
+            }
+            """.trimIndent(),
+        )
+
+        assertThat(findings).hasSize(2)
+        assertThat(findings[0])
+            .hasStartSourceLocation(1, 14)
+            .hasMessage("Constructor parameters should be in alphabetical order: apple, zebra.")
+        assertThat(findings[1])
+            .hasStartSourceLocation(2, 5)
+            .hasMessage("Constructor parameters should be in alphabetical order: apple, middle, zebra.")
+    }
 }

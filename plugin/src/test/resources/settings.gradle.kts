@@ -35,6 +35,7 @@ include("kmp-compose")
 include("kmp-jvm-js")
 include("kmp-jvm-js-clean")
 include("kmp-native")
+include("kmp-native-custom")
 include("kmp-project-dependency")
 include("kmp-project-dependency:producer")
 

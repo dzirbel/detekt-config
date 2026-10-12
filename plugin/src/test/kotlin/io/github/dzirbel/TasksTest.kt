@@ -7,6 +7,7 @@ import org.gradle.api.Task
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.configure
+import org.gradle.kotlin.dsl.getByType
 import org.gradle.testfixtures.ProjectBuilder
 import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
@@ -33,6 +34,40 @@ class TasksTest {
             listOf(":detekt", ":detektBaseline", ":detektGenerateConfig", ":generateDetektConfig"),
             project.tasks.map { it.path },
         )
+    }
+
+    @Test
+    fun `generated config tracks extension changes after task realization`() {
+        val project = project()
+        project.apply(plugin = "io.github.dzirbel.detekt-config")
+        val extension = project.extensions.getByType<DetektConfigExtension>()
+        val generate = project.tasks.getByName("generateDetektConfig") as GenerateDetektConfig
+        val detekt = project.extensions.getByType<DetektExtension>()
+
+        assertEquals(DetektConfigExtension.DEFAULT_TEST_PATHS, generate.testPaths.get())
+        assertEquals(DetektConfigExtension.DEFAULT_FORBIDDEN_METHOD_CALLS, extension.forbiddenMethodCalls.get())
+
+        extension.testPaths.set(listOf("**/customTests/**"))
+        extension.forbiddenMethodCalls.set(
+            listOf(
+                DetektConfigExtension.ForbiddenMethodCall("sample.withReason", "use another API"),
+                DetektConfigExtension.ForbiddenMethodCall("sample.withoutReason"),
+            ),
+        )
+        extension.config.from("first.yml", "second.yml")
+        project.layout.buildDirectory.set(project.file("custom-build"))
+
+        assertEquals(listOf("**/customTests/**"), generate.testPaths.get())
+        assertEquals(
+            listOf(
+                mapOf("value" to "sample.withReason", "reason" to "use another API"),
+                mapOf("value" to "sample.withoutReason"),
+            ),
+            generate.forbiddenMethods.get(),
+        )
+        assertEquals(listOf(project.file("first.yml"), project.file("second.yml")), generate.configFiles.toList())
+        assertEquals(project.file("custom-build/detekt/config.yml"), generate.outputFile.get().asFile)
+        assertEquals(listOf(generate.outputFile.get().asFile), detekt.config.toList())
     }
 
     @Test
