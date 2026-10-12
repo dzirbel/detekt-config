@@ -1,3 +1,4 @@
+import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
 import java.util.Properties
 
 plugins {
@@ -8,12 +9,27 @@ plugins {
 private val versions = rootProject.extra["versions"] as Properties
 private val detektVersion = versions.getProperty("detekt")
 
+// TestKit builds need the same agent as the test JVM, with output captured by the test task's build cache entry.
+val testkitCoverageProperties = tasks.register<WriteProperties>("generateTestkitCoverageProperties") {
+    destinationFile = layout.buildDirectory.file("testkit-coverage/testkit-gradle.properties")
+    property("org.gradle.jvmargs", tasks.test.map { task ->
+        val coverage = task.extensions.getByType<JacocoTaskExtension>()
+        // Gradle uses a relative destination for its test JVM; fixture JVMs have different working directories.
+        val agent = coverage.asJvmArg.replace(
+            "destfile=${project.relativePath(coverage.destinationFile!!)}",
+            "destfile=${coverage.destinationFile!!.absolutePath}",
+        )
+        "\"$agent\""
+    })
+}
+
 dependencies {
     compileOnly(kotlin("gradle-plugin"))
     implementation("dev.detekt:detekt-gradle-plugin:$detektVersion")
 
     testImplementation(kotlin("test"))
     testImplementation(kotlin("gradle-plugin"))
+    testRuntimeOnly(files(testkitCoverageProperties.map { it.destinationFile.get().asFile.parentFile }))
     implementation("org.yaml:snakeyaml:${versions.getProperty("snakeyaml")}")
 }
 

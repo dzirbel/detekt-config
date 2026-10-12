@@ -10,6 +10,9 @@ permissions:
 
 jobs:
   build:
+    permissions:
+      contents: read
+      id-token: write
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -29,3 +32,13 @@ jobs:
       - name: Run Gradle check (Windows)
         if: runner.os == 'Windows'
         run: .\gradlew.bat check
+
+      - name: Upload coverage
+        if: runner.os == 'Linux'
+        uses: codecov/codecov-action@v7.1.1
+        with:
+          # Fork pull requests use Codecov's public-repository tokenless upload.
+          use_oidc: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+          files: plugin/build/reports/jacoco/test/jacocoTestReport.xml,rules/build/reports/jacoco/test/jacocoTestReport.xml
+          disable_search: true
+          fail_ci_if_error: true

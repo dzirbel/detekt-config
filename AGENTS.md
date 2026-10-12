@@ -8,6 +8,8 @@
   what they are testing, how, and that the code must be correct for it to pass. Tests should be end-to-end and
   exhaustive when possible to achieve this goal. Implementation code is less important and can use hacks for performance
   or necessity, but test code must remain pristine.
+- `./gradlew check` is the acceptance criteria; it includes test coverage, linting, etc. that `:test` tasks may not.
+  Run more narrow tasks while iterating for efficiency, but ensure `:check` passes before handoff.
 
 ## Project Structure & Module Organization
 This project provides an opinionated Gradle plugin that configures the detekt static analysis tool.

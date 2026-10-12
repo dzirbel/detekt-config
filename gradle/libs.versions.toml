@@ -4,6 +4,7 @@ androidx-compose = "1.12.1"
 assertj = "3.27.7"
 compose = "1.12.1"
 coroutines = "1.11.0"
+jacoco = "0.8.15"
 kotlin = "2.4.21"
 node = "24.21.0"
 

@@ -7,6 +7,7 @@ import org.junit.Rule
 import org.junit.rules.ExternalResource
 import java.io.File
 import java.nio.file.Files
+import java.util.Properties
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -37,7 +38,20 @@ abstract class SampleProjectTest(
     protected val projectDir: File = run {
         val sourceRoot = File("src/test/resources")
         copyFixtureResources(sourceRoot, fixtureRoot)
+        configureFixtureCoverage(fixtureRoot)
         fixtureRoot.resolve(projectName)
+    }
+}
+
+private fun configureFixtureCoverage(fixtureRoot: File) {
+    val coverage = SampleProjectTest::class.java.classLoader.getResourceAsStream("testkit-gradle.properties") ?: return
+    val coverageProperties = Properties().apply { coverage.use { load(it) } }
+    val agent = coverageProperties.getProperty("org.gradle.jvmargs")
+    // Include standalone consumers as well as the shared composite build, preserving their existing JVM settings.
+    fixtureRoot.walkTopDown().filter { it.name == "gradle.properties" }.forEach { propertiesFile ->
+        val properties = Properties().apply { propertiesFile.inputStream().use { load(it) } }
+        properties.setProperty("org.gradle.jvmargs", properties.getProperty("org.gradle.jvmargs", "") + " " + agent)
+        propertiesFile.outputStream().use { properties.store(it, null) }
     }
 }
 
