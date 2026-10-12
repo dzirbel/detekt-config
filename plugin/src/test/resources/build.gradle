@@ -1,0 +1,8 @@
+def nodeVersion = libs.versions.node.get()
+
+// Configure every Node environment without loading Kotlin plugin classes in the root project.
+gradle.projectsEvaluated {
+    allprojects {
+        extensions.findByName('kotlinNodeJsSpec')?.version?.set(nodeVersion)
+    }
+}

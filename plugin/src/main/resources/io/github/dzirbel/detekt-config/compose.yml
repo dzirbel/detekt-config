@@ -43,6 +43,8 @@ Compose:
     active: true
   ModifierReused:
     active: true
+  ModifierShouldBeForwardedToEveryBranch:
+    active: true
   ModifierWithoutDefault:
     active: true
   MultipleEmitters:
