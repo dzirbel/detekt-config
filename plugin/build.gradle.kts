@@ -14,10 +14,12 @@ val testkitCoverageProperties = tasks.register<WriteProperties>("generateTestkit
     destinationFile = layout.buildDirectory.file("testkit-coverage/testkit-gradle.properties")
     property("org.gradle.jvmargs", tasks.test.map { task ->
         val coverage = task.extensions.getByType<JacocoTaskExtension>()
-        // Gradle uses a relative destination for its test JVM; fixture JVMs have different working directories.
+        val destination = requireNotNull(coverage.destinationFile)
+        // JaCoCo normalizes relative paths to forward slashes on every OS, including Windows.
+        val relativeDestination = destination.relativeTo(task.workingDirectory.get().asFile).invariantSeparatorsPath
         val agent = coverage.asJvmArg.replace(
-            "destfile=${project.relativePath(coverage.destinationFile!!)}",
-            "destfile=${coverage.destinationFile!!.absolutePath}",
+            "destfile=$relativeDestination",
+            "destfile=${destination.absolutePath}",
         )
         "\"$agent\""
     })
