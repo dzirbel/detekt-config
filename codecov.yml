@@ -9,6 +9,10 @@ coverage:
         target: 99%
         threshold: 0%
 
+parsers:
+  jacoco:
+    partials_as_hits: true
+
 component_management:
   default_rules:
     statuses:
