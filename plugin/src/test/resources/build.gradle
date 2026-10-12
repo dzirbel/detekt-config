@@ -1,6 +1,16 @@
+// Share one plugin classpath across the sample projects, including Kotlin's Android integration.
+plugins {
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.android.library) apply false
+    alias(libs.plugins.kotlin.jvm) apply false
+    alias(libs.plugins.kotlin.multiplatform) apply false
+    alias(libs.plugins.kotlin.compose) apply false
+    alias(libs.plugins.compose) apply false
+}
+
 def nodeVersion = libs.versions.node.get()
 
-// Configure every Node environment without loading Kotlin plugin classes in the root project.
+// Configure every Node environment through its Gradle extension.
 gradle.projectsEvaluated {
     allprojects {
         extensions.findByName('kotlinNodeJsSpec')?.version?.set(nodeVersion)
