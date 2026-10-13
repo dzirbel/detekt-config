@@ -25,6 +25,12 @@ internal class DetektCompilationAdapter(private val project: Project) {
     private val detektRoot = project.tasks.named("detekt", Detekt::class.java)
 
     fun configure() {
+        // Use the property directly: mapping the root TaskProvider would introduce a dependency back to the root.
+        val rootAutoCorrect = detektRoot.get().autoCorrect
+        project.tasks.withType(Detekt::class.java).matching { it.name != "detekt" }.configureEach {
+            autoCorrect.convention(rootAutoCorrect)
+        }
+
         project.pluginManager.withPlugin("com.android.base") {
             detektRoot.configure {
                 dependsOn(project.tasks.matching { task -> task.name == "detektMain" || task.name == "detektTest" })

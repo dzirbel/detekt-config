@@ -24,6 +24,7 @@ dependencyResolutionManagement {
 include("analysis-classpath")
 include("android-application")
 include("android-compose-library")
+include("auto-correct")
 include("config-cache")
 include("js")
 include("jvm")
