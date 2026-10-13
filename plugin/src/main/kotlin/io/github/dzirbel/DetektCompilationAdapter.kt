@@ -1,6 +1,7 @@
 package io.github.dzirbel
 
 import dev.detekt.gradle.Detekt
+import dev.detekt.gradle.DetektCreateBaselineTask
 import dev.detekt.gradle.extensions.DetektExtension
 import org.gradle.api.Project
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
@@ -61,6 +62,13 @@ internal class DetektCompilationAdapter(private val project: Project) {
         val compileTaskProvider = compilation.compileTaskProvider
         val sources = project.providers.provider {
             compilation.allKotlinSourceSets.map { it.kotlin }
+        }
+        // Upstream baseline tasks use source directories, discarding Kotlin's include/exclude filters.
+        val baselineTaskName = taskName.replaceFirst("detekt", "detektBaseline")
+        if (baselineTaskName in project.tasks.names) {
+            project.tasks.named(baselineTaskName, DetektCreateBaselineTask::class.java).configure {
+                setSource(sources)
+            }
         }
         val associatedOutputs = project.providers.provider {
             compilation.transitiveAssociatedCompilations().map { it.output.allOutputs }
